@@ -574,16 +574,11 @@ function stripFlag(name) {
 
 async function fetchLiveScores() {
     try {
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/live-scores`, {
-            headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.matches) {
-            liveScores = {};
-            data.matches.forEach(m => { liveScores[`${m.home_team}|${m.away_team}`] = m; });
-            renderMatches();
-        }
+        const { data, error } = await db().functions.invoke('live-scores');
+        if (error || !data?.matches) return;
+        liveScores = {};
+        data.matches.forEach(m => { liveScores[`${m.home_team}|${m.away_team}`] = m; });
+        renderMatches();
     } catch (e) { console.warn('Live scores error:', e); }
 }
 
