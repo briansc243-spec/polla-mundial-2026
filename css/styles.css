@@ -1090,32 +1090,6 @@ input:focus, select:focus {
     transition: all 0.3s ease;
 }
 
-.match-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.match-header .match-info {
-    margin-bottom: 0;
-    display: inline;
-}
-
-.match-venue-label {
-    margin-left: auto;
-}
-
-.match-body {
-    display: grid;
-    grid-template-columns: 1fr auto auto 1fr;
-    align-items: center;
-    gap: 12px;
-}
-
-.team-name-right {
-    text-align: right;
-}
 
 .match-prediction:hover {
     border-left-color: var(--primary);
@@ -1142,7 +1116,6 @@ input:focus, select:focus {
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 700;
-    margin-bottom: 6px;
     border: 1px solid var(--secondary);
 }
 
@@ -1154,7 +1127,6 @@ input:focus, select:focus {
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 700;
-    margin-bottom: 6px;
     border: 1px solid var(--accent);
 }
 
