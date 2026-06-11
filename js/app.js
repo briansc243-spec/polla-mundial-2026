@@ -645,22 +645,36 @@ async function saveSpecialPredictions() {
     showToast('✅ Predicciones especiales guardadas');
 }
 
+// Evitar llamadas concurrentes a init()
+let _initLock = false;
+
 // Inicialización
 async function init() {
-    // Los partidos siempre vienen del código (no se guardan en BD)
-    matches = defaultMatches;
+    if (_initLock) return;
+    _initLock = true;
 
-    // Cargar participantes
     try {
-        const listResult = await storage.list('participant:');
-        const keys = listResult ? listResult.keys : [];
-        participants = [];
-        for (const key of keys) {
-            const data = await storage.get(key);
-            if (data) participants.push(data);
+        // Los partidos siempre vienen del código (no se guardan en BD)
+        matches = defaultMatches;
+
+        // Cargar participantes
+        try {
+            const listResult = await storage.list('participant:');
+            const keys = listResult ? listResult.keys : [];
+            const loaded = [];
+            for (const key of keys) {
+                const data = await storage.get(key);
+                if (data) loaded.push(data);
+            }
+            // Deduplicar por nombre (por si acaso llegan duplicados)
+            participants = loaded.filter((p, i, arr) =>
+                arr.findIndex(x => x.name === p.name) === i
+            );
+        } catch (error) {
+            participants = [];
         }
-    } catch (error) {
-        participants = [];
+    } finally {
+        _initLock = false;
     }
 
     // Cargar resultados
