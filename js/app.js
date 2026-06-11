@@ -73,6 +73,18 @@ function togglePasswordVisibility() {
     }
 }
 
+function toggleChangePwd(inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn   = document.getElementById(btnId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
 function openChangePwdModal() {
     document.getElementById('changePwdCurrent').value = '';
     document.getElementById('changePwdNew').value = '';

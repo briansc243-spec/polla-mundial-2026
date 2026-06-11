@@ -108,15 +108,24 @@
             <h2 style="color:var(--primary,#00D9FF); font-family:'Bebas Neue',sans-serif; font-size:1.6rem; margin:0 0 20px; text-align:center;">🔑 Cambiar Contraseña</h2>
             <div class="form-group" style="margin-bottom:14px;">
                 <label style="font-size:0.85rem; color:#A0A8C0;">Contraseña actual</label>
-                <input type="password" id="changePwdCurrent" placeholder="Tu contraseña actual" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+                <div style="position:relative;">
+                    <input type="password" id="changePwdCurrent" placeholder="Tu contraseña actual" style="width:100%; padding:12px 48px 12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+                    <button type="button" onclick="toggleChangePwd('changePwdCurrent','eyeBtnCurrent')" id="eyeBtnCurrent" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; padding:2px; line-height:1;">👁️</button>
+                </div>
             </div>
             <div class="form-group" style="margin-bottom:14px;">
                 <label style="font-size:0.85rem; color:#A0A8C0;">Nueva contraseña</label>
-                <input type="password" id="changePwdNew" placeholder="Mínimo 6 caracteres" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+                <div style="position:relative;">
+                    <input type="password" id="changePwdNew" placeholder="Mínimo 6 caracteres" style="width:100%; padding:12px 48px 12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+                    <button type="button" onclick="toggleChangePwd('changePwdNew','eyeBtnNew')" id="eyeBtnNew" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; padding:2px; line-height:1;">👁️</button>
+                </div>
             </div>
             <div class="form-group" style="margin-bottom:8px;">
                 <label style="font-size:0.85rem; color:#A0A8C0;">Confirmar nueva contraseña</label>
-                <input type="password" id="changePwdConfirm" placeholder="Repite la nueva contraseña" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+                <div style="position:relative;">
+                    <input type="password" id="changePwdConfirm" placeholder="Repite la nueva contraseña" style="width:100%; padding:12px 48px 12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+                    <button type="button" onclick="toggleChangePwd('changePwdConfirm','eyeBtnConfirm')" id="eyeBtnConfirm" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; padding:2px; line-height:1;">👁️</button>
+                </div>
             </div>
             <div id="changePwdError" style="color:#FF3366; font-size:0.85rem; min-height:20px; margin-bottom:14px;"></div>
             <button onclick="changePassword()" style="width:100%; padding:13px; background:linear-gradient(135deg,#00D9FF,#0099CC); border:none; border-radius:10px; color:#0A0E27; font-weight:700; font-size:0.95rem; cursor:pointer; margin-bottom:10px;">

@@ -22,28 +22,14 @@ polla-mundial/
 ## 🚀 Cómo usar
 
 1. Abre `index.html` en tu navegador (o usa Live Server en VS Code)
-2. Inicia sesión con alguna de las credenciales:
-
-| Usuario     | Contraseña      |
-|-------------|-----------------|
-| admin       | prontopaga2026  |
-| usuario     | mundial2026     |
-| prontopaga  | polla2026       |
+2. Inicia sesión con tu usuario y contraseña
 
 ---
 
 ## 🔧 Cómo personalizar
 
 ### Cambiar o agregar usuarios
-Edita el objeto `VALID_CREDENTIALS` en `js/app.js`:
-```js
-const VALID_CREDENTIALS = {
-    'admin':      'prontopaga2026',
-    'usuario':    'mundial2026',
-    'prontopaga': 'polla2026',
-    'nuevo':      'mipassword123'   // ← agregar aquí
-};
-```
+Edita el objeto `VALID_CREDENTIALS` en `js/app.js`.
 
 ### Cambiar colores
 Edita las variables CSS en `css/styles.css`:
