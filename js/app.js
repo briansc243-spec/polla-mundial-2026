@@ -523,8 +523,8 @@ function renderMatches() {
                             ${statusBadge}
                             <div class="team-name">${match.team1 || 'Equipo 1'}</div>
                         </div>
-                        <input type="number" class="score-input" id="score1-${match.id}" min="0" max="20" value="${val1}" ${disabledAttr}>
-                        <input type="number" class="score-input" id="score2-${match.id}" min="0" max="20" value="${val2}" ${disabledAttr}>
+                        <input type="number" class="score-input" id="score1-${match.id}" min="0" max="20" value="${val1}" placeholder="-" ${disabledAttr}>
+                        <input type="number" class="score-input" id="score2-${match.id}" min="0" max="20" value="${val2}" placeholder="-" ${disabledAttr}>
                         <div>
                             <span class="match-info">${match.venue || ''}</span>
                             <div class="team-name">${match.team2 || 'Equipo 2'}</div>
