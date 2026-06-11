@@ -1249,6 +1249,74 @@ function updateLeaderboard() {
     }).join('');
 }
 
+// Pronósticos públicos: visibles 2 min después del inicio del partido
+function renderAllPicks() {
+    const container = document.getElementById('allPicksContainer');
+    if (!container) return;
+
+    const now = new Date();
+    const eligible = matches
+        .filter(m => new Date(m.dateTime).getTime() + 2 * 60 * 1000 < now.getTime())
+        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+    if (eligible.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-dim);text-align:center;padding:24px;font-size:0.9rem;">
+            Aún no hay partidos en curso. Los pronósticos se revelan al minuto 2 de cada partido.
+        </p>`;
+        return;
+    }
+
+    container.innerHTML = eligible.map(match => {
+        const result = results.find(r => r.matchId === match.id);
+
+        const rows = participants.map(p => {
+            const pred = p.predictions.find(pr => pr.matchId === match.id);
+            let badge = '<span style="color:var(--text-dim);">—</span>';
+            let rowBg = '';
+            if (pred && result) {
+                if (pred.score1 === result.score1 && pred.score2 === result.score2) {
+                    badge = '<span style="color:#00FF88;font-weight:700;">✅ Exacto</span>';
+                    rowBg = 'background:rgba(0,255,136,0.06);';
+                } else if (Math.sign(pred.score1 - pred.score2) === Math.sign(result.score1 - result.score2)) {
+                    badge = '<span style="color:#FFD700;font-weight:700;">↗ Tendencia</span>';
+                    rowBg = 'background:rgba(255,215,0,0.05);';
+                } else {
+                    badge = '<span style="color:#FF6B6B;">✗ Fallido</span>';
+                }
+            } else if (pred) {
+                badge = '<span style="color:var(--text-dim);font-size:0.8rem;">en juego</span>';
+            }
+            return `<tr style="${rowBg}border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:9px 14px;">${p.name}</td>
+                <td style="padding:9px 14px;text-align:center;font-weight:700;font-size:1.05rem;letter-spacing:1px;">
+                    ${pred ? `${pred.score1} - ${pred.score2}` : '<span style="color:var(--text-dim);">sin pick</span>'}
+                </td>
+                <td style="padding:9px 14px;text-align:center;">${badge}</td>
+            </tr>`;
+        }).join('');
+
+        const resultTag = result
+            ? `<span style="color:#00D9FF;font-weight:700;margin-left:8px;">· ${result.score1}-${result.score2} FINAL</span>`
+            : '';
+
+        return `<details style="margin-bottom:10px;border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;">
+            <summary style="padding:13px 18px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);user-select:none;">
+                <span style="font-size:0.95rem;font-weight:600;">${match.team1} <span style="color:var(--text-dim);">vs</span> ${match.team2}</span>
+                ${resultTag}
+                <span style="margin-left:auto;color:var(--text-dim);font-size:0.8rem;white-space:nowrap;">${formatPETime(match.dateTime)}</span>
+            </summary>
+            <table style="width:100%;border-collapse:collapse;">
+                <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font-size:0.82rem;">
+                    <th style="padding:8px 14px;text-align:left;font-weight:500;">Participante</th>
+                    <th style="padding:8px 14px;text-align:center;font-weight:500;">Pronóstico</th>
+                    <th style="padding:8px 14px;text-align:center;font-weight:500;">Resultado</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </details>`;
+    }).join('');
+}
+
 // Actualizar estadísticas
 function updateStats() {
     const username = sessionStorage.getItem('pollaUser');
@@ -1268,6 +1336,7 @@ function updateStats() {
     if (rankEl) rankEl.textContent = me ? `#${myRank}` : '-';
 
     renderCharts(displayName);
+    renderAllPicks();
 }
 
 // Renderizar gráficos
@@ -1379,6 +1448,7 @@ function switchTab(tabName) {
         const username = sessionStorage.getItem('pollaUser');
         const displayName = localStorage.getItem(`pollaDisplayName:${username}`);
         setTimeout(() => renderCharts(displayName), 100);
+        renderAllPicks();
     }
     if (tabName === 'myPredictions') {
         renderMyPredictions();
