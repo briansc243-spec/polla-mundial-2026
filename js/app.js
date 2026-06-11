@@ -370,19 +370,19 @@ function initSpecialPredictions() {
     const displayName = localStorage.getItem(`pollaDisplayName:${username}`);
     const me = participants.find(p => p.name === displayName);
     const sp = me?.specialPredictions;
-    const alreadySaved = sp && (sp.champion || sp.runnerUp || sp.topScorer || sp.totalGoals);
+    const alreadySaved = sp && (sp.champion || sp.runnerUp || sp.thirdPlace || sp.topScorer);
     const deadlinePassed = isSpecialDeadlinePassed();
 
     const btn = document.getElementById('saveSpecialBtn');
     const banner = document.getElementById('specialDeadlineBanner');
-    const fields = ['predChampion', 'predRunnerUp', 'predTopScorer', 'predTotalGoals'];
+    const fields = ['predChampion', 'predRunnerUp', 'predThirdPlace', 'predTopScorer'];
 
     // Pre-llenar campos con datos guardados
     if (sp) {
         document.getElementById('predChampion').value = sp.champion || '';
         document.getElementById('predRunnerUp').value = sp.runnerUp || '';
+        document.getElementById('predThirdPlace').value = sp.thirdPlace || '';
         document.getElementById('predTopScorer').value = sp.topScorer || '';
-        document.getElementById('predTotalGoals').value = sp.totalGoals || '';
     }
 
     if (deadlinePassed) {
@@ -435,7 +435,7 @@ function initSpecialPredictions() {
 }
 
 function unlockSpecialPredictions() {
-    const fields = ['predChampion', 'predRunnerUp', 'predTopScorer', 'predTotalGoals'];
+    const fields = ['predChampion', 'predRunnerUp', 'predThirdPlace', 'predTopScorer'];
     fields.forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.disabled = false; el.style.opacity = '1'; }
@@ -462,10 +462,10 @@ async function saveSpecialPredictions() {
 
     const champVal = document.getElementById('predChampion')?.value.trim();
     const runnerVal = document.getElementById('predRunnerUp')?.value.trim();
+    const thirdVal  = document.getElementById('predThirdPlace')?.value.trim();
     const scorerVal = document.getElementById('predTopScorer')?.value.trim();
-    const goalsVal  = document.getElementById('predTotalGoals')?.value;
 
-    if (!champVal && !runnerVal && !scorerVal && !goalsVal) {
+    if (!champVal && !runnerVal && !thirdVal && !scorerVal) {
         showToast('⚠️ Completa al menos un campo antes de guardar');
         return;
     }
@@ -473,10 +473,10 @@ async function saveSpecialPredictions() {
     const existing = await storage.get(`participant:${displayName}`);
     const prevSpecial = existing?.specialPredictions || {};
     const specialPredictions = {
-        champion:   champVal  || prevSpecial.champion  || '',
-        runnerUp:   runnerVal || prevSpecial.runnerUp  || '',
-        topScorer:  scorerVal || prevSpecial.topScorer || '',
-        totalGoals: goalsVal !== '' ? (parseInt(goalsVal) || 0) : (prevSpecial.totalGoals ?? 0)
+        champion:   champVal  || prevSpecial.champion   || '',
+        runnerUp:   runnerVal || prevSpecial.runnerUp   || '',
+        thirdPlace: thirdVal  || prevSpecial.thirdPlace || '',
+        topScorer:  scorerVal || prevSpecial.topScorer  || ''
     };
 
     const participant = {
@@ -565,8 +565,8 @@ function renderMyPredictions() {
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.88rem;">
                     <div><span style="color:#A0A8C0;">🥇 Campeón:</span> <strong>${sp.champion || '—'}</strong></div>
                     <div><span style="color:#A0A8C0;">🥈 Subcampeón:</span> <strong>${sp.runnerUp || '—'}</strong></div>
+                    <div><span style="color:#A0A8C0;">🥉 Tercer puesto:</span> <strong>${sp.thirdPlace || '—'}</strong></div>
                     <div><span style="color:#A0A8C0;">⚽ Goleador:</span> <strong>${sp.topScorer || '—'}</strong></div>
-                    <div><span style="color:#A0A8C0;">🎯 Total goles:</span> <strong>${sp.totalGoals || '—'}</strong></div>
                 </div>
             </div>`;
     }
