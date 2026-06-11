@@ -9,21 +9,6 @@ async function hashPassword(password) {
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Usuarios por defecto si la tabla está vacía (primera vez)
-const DEFAULT_USERS = [
-    { username: 'admin', password: 'Adm!n@2026', role: 'admin' },
-    { username: 'brian', password: 'Br!an@2026', role: 'user'  },
-    { username: 'oscar', password: '0sc4r@2026', role: 'user'  }
-];
-
-async function seedUsersIfNeeded() {
-    const { data } = await db().from('polla_users').select('username').limit(1);
-    if (data && data.length > 0) return;
-    for (const u of DEFAULT_USERS) {
-        const hash = await hashPassword(u.password);
-        await db().from('polla_users').upsert({ username: u.username, password_hash: hash, role: u.role });
-    }
-}
 
 // Verificar si ya hay sesión activa
 function checkSession() {
@@ -50,8 +35,6 @@ async function handleLogin() {
     if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
 
     try {
-        await seedUsersIfNeeded();
-
         const { data, error } = await db()
             .from('polla_users')
             .select('username, password_hash, role')
