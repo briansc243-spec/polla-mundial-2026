@@ -58,6 +58,9 @@ async function handleLogin() {
 }
 
 // ── Cambiar contraseña (usuario actual) ────────────────────────────────────
+function openPointsModal()  { document.getElementById('pointsModal').style.display = 'flex'; }
+function closePointsModal() { document.getElementById('pointsModal').style.display = 'none'; }
+
 function openChangePwdModal() {
     document.getElementById('changePwdCurrent').value = '';
     document.getElementById('changePwdNew').value = '';

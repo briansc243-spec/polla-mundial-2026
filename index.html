@@ -159,6 +159,62 @@
         </div>
     </div>
 
+    <!-- Modal: Cómo se puntúa -->
+    <div id="pointsModal" style="display:none; position:fixed; inset:0; background:rgba(10,14,39,0.93); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:var(--dark-2,#131929); border:1px solid rgba(0,217,255,0.25); border-radius:20px; padding:32px 28px; max-width:480px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 0 50px rgba(0,217,255,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h2 style="color:var(--primary,#00D9FF); font-family:'Bebas Neue',sans-serif; font-size:1.7rem; margin:0;">ℹ️ Sistema de Puntuación</h2>
+                <button onclick="closePointsModal()" style="background:rgba(255,255,255,0.08); border:none; color:#A0A8C0; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1.1rem;">✕</button>
+            </div>
+
+            <h4 style="color:#FFD700; font-size:0.8rem; letter-spacing:1px; margin:0 0 12px;">PREDICCIONES DE PARTIDOS</h4>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:24px;">
+                <div style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:rgba(0,255,136,0.07); border:1px solid rgba(0,255,136,0.2); border-radius:12px;">
+                    <span style="font-size:1.6rem; min-width:36px; text-align:center;">🎯</span>
+                    <div>
+                        <div style="color:#00FF88; font-weight:700; font-size:1rem;">3 puntos — Resultado exacto</div>
+                        <div style="color:#A0A8C0; font-size:0.85rem; margin-top:3px;">Predijiste el marcador exacto. Ej: predijiste 2-1 y el partido terminó 2-1.</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:rgba(0,217,255,0.06); border:1px solid rgba(0,217,255,0.2); border-radius:12px;">
+                    <span style="font-size:1.6rem; min-width:36px; text-align:center;">✅</span>
+                    <div>
+                        <div style="color:#00D9FF; font-weight:700; font-size:1rem;">1 punto — Tendencia correcta</div>
+                        <div style="color:#A0A8C0; font-size:0.85rem; margin-top:3px;">Acertaste quién gana o que hay empate, pero no el marcador exacto. Ej: predijiste 1-0 y fue 3-0.</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:rgba(255,51,102,0.06); border:1px solid rgba(255,51,102,0.2); border-radius:12px;">
+                    <span style="font-size:1.6rem; min-width:36px; text-align:center;">❌</span>
+                    <div>
+                        <div style="color:#FF3366; font-weight:700; font-size:1rem;">0 puntos — Resultado incorrecto</div>
+                        <div style="color:#A0A8C0; font-size:0.85rem; margin-top:3px;">No acertaste ni el resultado ni el marcador. Ej: predijiste que ganaba el equipo 1 y ganó el equipo 2.</div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="color:#FFD700; font-size:0.8rem; letter-spacing:1px; margin:0 0 12px;">PREDICCIONES ESPECIALES</h4>
+            <div style="background:rgba(255,215,0,0.05); border:1px solid rgba(255,215,0,0.2); border-radius:12px; padding:14px 16px; margin-bottom:24px;">
+                <div style="color:#A0A8C0; font-size:0.88rem; line-height:1.6;">
+                    🥇 Campeón · 🥈 Subcampeón · 🥉 Tercer puesto · ⚽ Goleador<br>
+                    <span style="color:#E0E6F8; margin-top:6px; display:block;">Cada predicción especial correcta otorga <strong style="color:#FFD700;">5 puntos</strong> adicionales al final del torneo.</span>
+                    <span style="color:#FF6B6B; font-size:0.82rem; margin-top:4px; display:block;">⏳ Plazo para completarlas: martes 16 de junio.</span>
+                </div>
+            </div>
+
+            <h4 style="color:#FFD700; font-size:0.8rem; letter-spacing:1px; margin:0 0 12px;">EJEMPLOS</h4>
+            <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:14px 16px; font-size:0.85rem; color:#A0A8C0; line-height:1.8;">
+                <div>🇧🇷 2 - 0 🇦🇷 (resultado real)</div>
+                <div style="padding-left:12px;">→ Predijiste <strong>2-0</strong> → <span style="color:#00FF88;">+3 pts</span></div>
+                <div style="padding-left:12px;">→ Predijiste <strong>1-0</strong> → <span style="color:#00D9FF;">+1 pt</span></div>
+                <div style="padding-left:12px;">→ Predijiste <strong>0-1</strong> → <span style="color:#FF3366;">0 pts</span></div>
+            </div>
+
+            <button onclick="closePointsModal()" style="width:100%; margin-top:20px; padding:12px; background:linear-gradient(135deg,#00D9FF,#0099CC); border:none; border-radius:10px; color:#0A0E27; font-weight:700; font-size:0.95rem; cursor:pointer;">
+                ¡Entendido!
+            </button>
+        </div>
+    </div>
+
     <div class="container" id="mainApp" style="display: none;">
         <!-- Logo ProntoPaga fijo arriba derecha -->
         <div class="brand-logo">
@@ -194,6 +250,9 @@
             </button>
             <button class="tab-btn" onclick="switchTab('stats')">
                 <span>📊 Estadísticas</span>
+            </button>
+            <button class="tab-btn tab-btn-info" onclick="openPointsModal()" title="¿Cómo se puntúa?">
+                <span>ℹ️ Puntuación</span>
             </button>
         </div>
 
