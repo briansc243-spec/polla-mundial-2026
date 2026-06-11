@@ -928,16 +928,16 @@ function renderMatches() {
 
                     return `
                     <div class="match-prediction ${lockedClass}">
-                        <div>
+                        <div class="match-header">
                             <span class="match-info">${formatPETime(match.dateTime)}</span>
                             ${statusBadge}
-                            <div class="team-name">${match.team1 || 'Equipo 1'}</div>
+                            <span class="match-info match-venue-label">📍 ${match.venue || ''}</span>
                         </div>
-                        <input type="number" class="score-input" id="score1-${match.id}" min="0" max="20" value="${val1}" placeholder="-" ${disabledAttr}>
-                        <input type="number" class="score-input" id="score2-${match.id}" min="0" max="20" value="${val2}" placeholder="-" ${disabledAttr}>
-                        <div>
-                            <span class="match-info">${match.venue || ''}</span>
-                            <div class="team-name">${match.team2 || 'Equipo 2'}</div>
+                        <div class="match-body">
+                            <div class="team-name">${match.team1 || 'Equipo 1'}</div>
+                            <input type="number" class="score-input" id="score1-${match.id}" min="0" max="20" value="${val1}" placeholder="-" ${disabledAttr}>
+                            <input type="number" class="score-input" id="score2-${match.id}" min="0" max="20" value="${val2}" placeholder="-" ${disabledAttr}>
+                            <div class="team-name team-name-right">${match.team2 || 'Equipo 2'}</div>
                         </div>
                     </div>
                 `}).join('')}
