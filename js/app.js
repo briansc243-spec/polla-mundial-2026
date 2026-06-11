@@ -482,7 +482,7 @@ function isMatchLocked(match) {
     
     const now = new Date();
     const matchTime = new Date(match.dateTime);
-    const lockTime = new Date(matchTime.getTime() - 30 * 60 * 1000); // 30 minutos antes
+    const lockTime = new Date(matchTime.getTime() - 1 * 60 * 1000); // 1 minuto antes
     
     return now >= lockTime;
 }
@@ -493,7 +493,7 @@ function getTimeUntilLock(match) {
     
     const now = new Date();
     const matchTime = new Date(match.dateTime);
-    const lockTime = new Date(matchTime.getTime() - 30 * 60 * 1000);
+    const lockTime = new Date(matchTime.getTime() - 1 * 60 * 1000);
     
     if (now >= lockTime) {
         return 'CERRADO';
