@@ -576,9 +576,36 @@ async function fetchLiveScores() {
     try {
         const { data, error } = await db().functions.invoke('live-scores');
         if (error || !data?.matches) return;
+
         liveScores = {};
         data.matches.forEach(m => { liveScores[`${m.home_team}|${m.away_team}`] = m; });
-        renderMatches();
+
+        // Auto-guardar resultados finales y recalcular puntos
+        let changed = false;
+        for (const m of data.matches) {
+            if (m.status === 'FINISHED' && m.home_score !== null && m.away_score !== null) {
+                const internalMatch = matches.find(match =>
+                    stripFlag(match.team1) === m.home_team &&
+                    stripFlag(match.team2) === m.away_team
+                );
+                if (internalMatch && !results.find(r => r.matchId === internalMatch.id)) {
+                    results.push({ matchId: internalMatch.id, score1: m.home_score, score2: m.away_score });
+                    changed = true;
+                    logAction(sessionStorage.getItem('pollaUser'), 'auto_save_result', {
+                        matchId: internalMatch.id, home: m.home_team, away: m.away_team,
+                        score: `${m.home_score}-${m.away_score}`
+                    });
+                }
+            }
+        }
+
+        if (changed) {
+            await storage.set('results', results);
+            await init();
+            showToast('✅ Resultados actualizados automáticamente');
+        } else {
+            renderMatches();
+        }
     } catch (e) { console.warn('Live scores error:', e); }
 }
 
