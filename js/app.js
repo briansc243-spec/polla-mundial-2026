@@ -2,12 +2,6 @@
 // SISTEMA DE LOGIN — usuarios en Supabase
 // ========================================
 
-// Hash SHA-256 para contraseñas (no se guardan en texto plano)
-async function hashPassword(password) {
-    const data = new TextEncoder().encode(password);
-    const buf  = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
 
 // Verificar si ya hay sesión activa
@@ -46,8 +40,7 @@ async function handleLogin() {
             return;
         }
 
-        const hash = await hashPassword(password);
-        if (hash !== data.password_hash) {
+        if (password !== data.password_hash) {
             showLoginError('❌ Usuario o contraseña incorrectos');
             return;
         }
@@ -88,11 +81,9 @@ async function changePassword() {
     if (newPwd.length < 6)                      { errDiv.textContent = 'Mínimo 6 caracteres'; return; }
 
     const { data } = await db().from('polla_users').select('password_hash').eq('username', username).maybeSingle();
-    const currentHash = await hashPassword(currentPwd);
-    if (!data || data.password_hash !== currentHash) { errDiv.textContent = '❌ Contraseña actual incorrecta'; return; }
+    if (!data || data.password_hash !== currentPwd) { errDiv.textContent = '❌ Contraseña actual incorrecta'; return; }
 
-    const newHash = await hashPassword(newPwd);
-    await db().from('polla_users').update({ password_hash: newHash }).eq('username', username);
+    await db().from('polla_users').update({ password_hash: newPwd }).eq('username', username);
     closeChangePwdModal();
     showToast('✅ Contraseña actualizada');
 }
@@ -137,8 +128,7 @@ async function adminCreateUser() {
     const { data: exists } = await db().from('polla_users').select('username').eq('username', username).maybeSingle();
     if (exists) { errDiv.textContent = '❌ Ese usuario ya existe'; return; }
 
-    const hash = await hashPassword(password);
-    const { error } = await db().from('polla_users').insert({ username, password_hash: hash, role });
+    const { error } = await db().from('polla_users').insert({ username, password_hash: password, role });
     if (error) { errDiv.textContent = '❌ Error al crear usuario'; return; }
 
     document.getElementById('newUserName').value = '';
@@ -166,8 +156,7 @@ async function adminResetPassword() {
     const { data: exists } = await db().from('polla_users').select('username').eq('username', username).maybeSingle();
     if (!exists) { errDiv.textContent = '❌ Usuario no encontrado'; return; }
 
-    const hash = await hashPassword(password);
-    await db().from('polla_users').update({ password_hash: hash }).eq('username', username);
+    await db().from('polla_users').update({ password_hash: password }).eq('username', username);
     document.getElementById('resetUserName').value = '';
     document.getElementById('resetUserPassword').value = '';
     errDiv.textContent = '';
