@@ -977,7 +977,8 @@ function renderMatches() {
             </div>`
         );
     }
-    if (stickyWrapper) stickyWrapper.style.display = 'flex';
+    const predictionsActive = document.getElementById('predictions')?.classList.contains('active');
+    if (stickyWrapper) stickyWrapper.style.display = predictionsActive ? 'flex' : 'none';
 
     const validMatches = matches.filter(m => m.group !== undefined && m.group !== null);
     const groupedMatches = {};
@@ -1254,6 +1255,7 @@ function renderAllPicks() {
     const container = document.getElementById('allPicksContainer');
     if (!container) return;
 
+    try {
     const now = new Date();
     const eligible = matches
         .filter(m => new Date(m.dateTime).getTime() + 2 * 60 * 1000 < now.getTime())
@@ -1315,6 +1317,10 @@ function renderAllPicks() {
             </table>
         </details>`;
     }).join('');
+    } catch (e) {
+        container.innerHTML = `<p style="color:#FF6B6B;padding:16px;">Error al cargar pronósticos: ${e.message}</p>`;
+        console.error('renderAllPicks error:', e);
+    }
 }
 
 // Actualizar estadísticas
