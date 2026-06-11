@@ -574,8 +574,23 @@ function stripFlag(name) {
 
 async function fetchLiveScores() {
     try {
+        // Cargar último estado conocido de polla_live como base
+        const { data: liveRows } = await db().from('polla_live').select('*');
+        if (liveRows) {
+            liveRows.forEach(row => {
+                const key = `${row.home_team}|${row.away_team}`;
+                if (!liveScores[key]) {
+                    liveScores[key] = {
+                        home_team: row.home_team, away_team: row.away_team,
+                        home_score: row.home_score, away_score: row.away_score,
+                        status: row.status, minute: row.minute
+                    };
+                }
+            });
+        }
+
         const { data, error } = await db().functions.invoke('live-scores');
-        if (error || !data?.matches) return;
+        if (error || !data?.matches) { renderMatches(); return; }
 
         // Actualizar liveScores sin hacer downgrade de status activo
         // (el API gratuito a veces devuelve TIMED para partidos en curso)
@@ -585,7 +600,12 @@ async function fetchLiveScores() {
             const existing = liveScores[key];
             const newRank = STATUS_RANK[m.status] ?? 0;
             const existRank = existing ? (STATUS_RANK[existing.status] ?? 0) : 0;
-            if (newRank >= existRank) liveScores[key] = m;
+            // Si el nuevo dato tiene score, siempre actualizamos el score aunque no mejore status
+            if (newRank >= existRank) {
+                liveScores[key] = m;
+            } else if (m.home_score !== null && existing) {
+                liveScores[key] = { ...existing, home_score: m.home_score, away_score: m.away_score };
+            }
         });
 
         // Auto-guardar resultados finales y recalcular puntos
@@ -1005,7 +1025,9 @@ function renderMatches() {
                     } else if (live && live.status === 'PAUSED') {
                         liveBadge = `<span style="background:rgba(255,215,0,0.15); border:1px solid #FFD700; color:#FFD700; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">⏸ ${live.home_score}-${live.away_score} · DESCANSO</span>`;
                     } else if (isInTimeWindow) {
-                        liveBadge = `<span style="background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.4); color:#00FF88; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; animation:pulse 1.5s infinite;">⚽ EN CURSO</span>`;
+                        const knownScore = (live && live.home_score !== null && live.away_score !== null)
+                            ? ` ${live.home_score}-${live.away_score} ·` : '';
+                        liveBadge = `<span style="background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.4); color:#00FF88; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; animation:pulse 1.5s infinite;">⚽${knownScore} EN CURSO</span>`;
                     }
 
                     return `
