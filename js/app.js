@@ -59,12 +59,18 @@ function showLoginError(message) {
 }
 
 // Mostrar aplicación principal
-function showMainApp() {
+async function showMainApp() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('logoutBtn').style.display = 'block';
 
     const username = sessionStorage.getItem('pollaUser');
-    const savedName = localStorage.getItem(`pollaDisplayName:${username}`);
+
+    // Intentar cache local primero, luego Supabase
+    let savedName = localStorage.getItem(`pollaDisplayName:${username}`);
+    if (!savedName) {
+        savedName = await storage.get(`displayName:${username}`);
+        if (savedName) localStorage.setItem(`pollaDisplayName:${username}`, savedName);
+    }
 
     if (!savedName) {
         showDisplayNameModal();
@@ -88,7 +94,7 @@ function showDisplayNameModal() {
 }
 
 // Confirmar nombre de participante
-function confirmDisplayName() {
+async function confirmDisplayName() {
     const input = document.getElementById('displayNameInput');
     const name = input.value.trim();
     const errorDiv = document.getElementById('displayNameError');
@@ -104,6 +110,7 @@ function confirmDisplayName() {
 
     const username = sessionStorage.getItem('pollaUser');
     localStorage.setItem(`pollaDisplayName:${username}`, name);
+    await storage.set(`displayName:${username}`, name);
 
     document.getElementById('displayNameModal').style.display = 'none';
     lockParticipantName(name);
@@ -169,35 +176,50 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================
-// Sistema de almacenamiento persistente
+// Sistema de almacenamiento — Supabase
+let _sb = null;
+function db() {
+    if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return _sb;
+}
+
 const storage = {
     get: async (key) => {
         try {
-            const val = localStorage.getItem(`polla_${key}`);
-            return val ? JSON.parse(val) : null;
-        } catch {
+            const { data, error } = await db()
+                .from('polla_data')
+                .select('value')
+                .eq('key', key)
+                .maybeSingle();
+            if (error) throw error;
+            return data?.value ?? null;
+        } catch (e) {
+            console.error('storage.get', key, e);
             return null;
         }
     },
     set: async (key, value) => {
         try {
-            localStorage.setItem(`polla_${key}`, JSON.stringify(value));
+            const { error } = await db()
+                .from('polla_data')
+                .upsert({ key, value }, { onConflict: 'key' });
+            if (error) throw error;
             return true;
-        } catch {
+        } catch (e) {
+            console.error('storage.set', key, e);
             return false;
         }
     },
     list: async (prefix) => {
         try {
-            const keys = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const k = localStorage.key(i);
-                if (k && k.startsWith(`polla_${prefix}`)) {
-                    keys.push(k.replace('polla_', ''));
-                }
-            }
-            return { keys };
-        } catch {
+            const { data, error } = await db()
+                .from('polla_data')
+                .select('key')
+                .like('key', `${prefix}%`);
+            if (error) throw error;
+            return { keys: (data ?? []).map(r => r.key) };
+        } catch (e) {
+            console.error('storage.list', prefix, e);
             return { keys: [] };
         }
     }
@@ -492,9 +514,8 @@ async function saveSpecialPredictions() {
 
 // Inicialización
 async function init() {
-    // SIEMPRE usar los partidos predeterminados actualizados
+    // Los partidos siempre vienen del código (no se guardan en BD)
     matches = defaultMatches;
-    await storage.set('matches', matches);
 
     // Cargar participantes
     try {
