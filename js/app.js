@@ -266,6 +266,7 @@ function showLoginError(message) {
 async function showMainApp() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('logoutBtn').style.display = 'block';
+    startLivePolling();
 
     const username = sessionStorage.getItem('pollaUser');
 
@@ -390,6 +391,7 @@ function lockParticipantName(name) {
 // Cerrar sesión
 function logout() {
     if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+        stopLivePolling();
         sessionStorage.clear();
         document.getElementById('headerBtns').style.display = 'none';
         location.reload();
@@ -563,6 +565,37 @@ const defaultMatches = [
 let matches = [];
 let participants = [];
 let results = [];
+let liveScores = {};
+let _livePollingInterval = null;
+
+function stripFlag(name) {
+    return name.replace(/^[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]+/, '').trim();
+}
+
+async function fetchLiveScores() {
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/live-scores`, {
+            headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.matches) {
+            liveScores = {};
+            data.matches.forEach(m => { liveScores[`${m.home_team}|${m.away_team}`] = m; });
+            renderMatches();
+        }
+    } catch (e) { console.warn('Live scores error:', e); }
+}
+
+function startLivePolling() {
+    if (_livePollingInterval) clearInterval(_livePollingInterval);
+    fetchLiveScores();
+    _livePollingInterval = setInterval(fetchLiveScores, 60000);
+}
+
+function stopLivePolling() {
+    if (_livePollingInterval) { clearInterval(_livePollingInterval); _livePollingInterval = null; }
+}
 
 // Convierte un dateTime ISO a hora Peru (America/Lima)
 function formatPETime(dateTimeStr) {
@@ -926,11 +959,24 @@ function renderMatches() {
                             ? '<span class="match-status-locked">🔒 CERRADO</span>'
                             : timeInfo ? `<span class="match-status-open">⏰ ${timeInfo}</span>` : '';
 
+                    // Live score badge
+                    const liveKey = `${stripFlag(match.team1)}|${stripFlag(match.team2)}`;
+                    const live = liveScores[liveKey];
+                    let liveBadge = '';
+                    if (live && live.status === 'IN_PLAY') {
+                        liveBadge = `<span style="background:rgba(0,255,136,0.15); border:1px solid #00FF88; color:#00FF88; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; animation:pulse 1.5s infinite;">⚽ ${live.home_score}-${live.away_score} · ${live.minute || ''}' EN VIVO</span>`;
+                    } else if (live && live.status === 'PAUSED') {
+                        liveBadge = `<span style="background:rgba(255,215,0,0.15); border:1px solid #FFD700; color:#FFD700; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">⏸ ${live.home_score}-${live.away_score} · DESCANSO</span>`;
+                    } else if (live && live.status === 'FINISHED') {
+                        liveBadge = `<span style="background:rgba(0,217,255,0.1); border:1px solid #00D9FF; color:#00D9FF; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">✅ ${live.home_score}-${live.away_score} · FINAL</span>`;
+                    }
+
                     return `
                     <div class="match-prediction ${lockedClass}">
                         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px;">
                             <span class="match-info" style="margin:0;">${formatPETime(match.dateTime)}</span>
                             ${statusBadge}
+                            ${liveBadge}
                             <span class="match-info" style="margin:0 0 0 auto; white-space:nowrap;">📍 ${match.venue || ''}</span>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr auto auto 1fr; align-items:center; gap:12px;">
