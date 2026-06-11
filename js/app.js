@@ -471,24 +471,20 @@ function renderMatches() {
     const username = sessionStorage.getItem('pollaUser');
     const displayName = localStorage.getItem(`pollaDisplayName:${username}`);
     const me = participants.find(p => p.name === displayName);
-    const alreadySaved = !!me;
+    const savedCount = me ? me.predictions.length : 0;
 
     const container = document.getElementById('matchesContainer');
     const stickyWrapper = document.getElementById('saveBtnStickyWrapper');
 
-    if (alreadySaved) {
-        if (stickyWrapper) stickyWrapper.style.display = 'none';
-        if (!document.getElementById('savedBanner')) {
-            container.insertAdjacentHTML('beforebegin',
-                `<div id="savedBanner" style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);border-radius:12px;padding:14px 18px;margin-bottom:20px;color:#00FF88;font-size:0.9rem;">
-                    ✅ Ya registraste tus predicciones. Los marcadores que ingresaste se muestran bloqueados.
-                </div>`
-            );
-        }
-    } else {
-        document.getElementById('savedBanner')?.remove();
-        if (stickyWrapper) stickyWrapper.style.display = 'flex';
+    document.getElementById('savedBanner')?.remove();
+    if (savedCount > 0) {
+        container.insertAdjacentHTML('beforebegin',
+            `<div id="savedBanner" style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);border-radius:12px;padding:14px 18px;margin-bottom:20px;color:#00FF88;font-size:0.9rem;">
+                ✅ Tienes <strong>${savedCount}</strong> predicciones guardadas. Puedes seguir completando las demás.
+            </div>`
+        );
     }
+    if (stickyWrapper) stickyWrapper.style.display = 'flex';
 
     const validMatches = matches.filter(m => m.group !== undefined && m.group !== null);
     const groupedMatches = {};
@@ -503,18 +499,20 @@ function renderMatches() {
             <div class="group-predictions">
                 <h4 class="group-predictions-title">Grupo ${group}</h4>
                 ${groupedMatches[group].map(match => {
-                    const locked = isMatchLocked(match) || alreadySaved;
-                    const timeInfo = !alreadySaved ? getTimeUntilLock(match) : null;
+                    const savedPred = me ? me.predictions.find(p => p.matchId === match.id) : null;
+                    const lockedByUser = !!savedPred;
+                    const lockedByTime = isMatchLocked(match);
+                    const locked = lockedByTime || lockedByUser;
+                    const timeInfo = !locked ? getTimeUntilLock(match) : null;
                     const lockedClass = locked ? 'match-locked' : '';
                     const disabledAttr = locked ? 'disabled' : '';
 
-                    const savedPred = alreadySaved ? me.predictions.find(p => p.matchId === match.id) : null;
-                    const val1 = savedPred ? savedPred.score1 : '0';
-                    const val2 = savedPred ? savedPred.score2 : '0';
+                    const val1 = savedPred ? savedPred.score1 : '';
+                    const val2 = savedPred ? savedPred.score2 : '';
 
-                    const statusBadge = alreadySaved
+                    const statusBadge = lockedByUser
                         ? '<span class="match-status-locked">🔒 TU PICK</span>'
-                        : isMatchLocked(match)
+                        : lockedByTime
                             ? '<span class="match-status-locked">🔒 CERRADO</span>'
                             : timeInfo ? `<span class="match-status-open">⏰ ${timeInfo}</span>` : '';
 
@@ -579,59 +577,68 @@ function renderResults() {
 // Guardar predicciones
 async function submitPredictions() {
     const name = document.getElementById('participantName').value.trim();
-    
+
     if (!name) {
         alert('Por favor ingresa tu nombre');
         return;
     }
 
-    // Verificar si el participante ya existe
-    const existingParticipant = await storage.get(`participant:${name}`);
-    if (existingParticipant) {
-        alert(`❌ El participante "${name}" ya ha registrado sus predicciones. Por favor usa otro nombre o edita tus predicciones existentes.`);
+    // Solo guardar partidos donde el usuario ingresó ambos scores explícitamente
+    const newPredictions = matches
+        .filter(match => {
+            if (isMatchLocked(match)) return false;
+            const s1 = document.getElementById(`score1-${match.id}`)?.value;
+            const s2 = document.getElementById(`score2-${match.id}`)?.value;
+            return s1 !== '' && s1 !== undefined && s2 !== '' && s2 !== undefined;
+        })
+        .map(match => ({
+            matchId: match.id,
+            score1: parseInt(document.getElementById(`score1-${match.id}`)?.value),
+            score2: parseInt(document.getElementById(`score2-${match.id}`)?.value)
+        }));
+
+    if (newPredictions.length === 0) {
+        showToast('⚠️ Ingresa al menos 1 predicción antes de guardar');
         return;
     }
 
-    // Verificar partidos bloqueados
-    const lockedMatches = matches.filter(m => isMatchLocked(m));
-    if (lockedMatches.length > 0) {
-        const lockedCount = lockedMatches.length;
-        const confirmMsg = `⚠️ ADVERTENCIA: Hay ${lockedCount} partido(s) que ya empezaron o están por empezar.\n\nEstos partidos ya no se pueden predecir y quedarán con marcador 0-0.\n\n¿Deseas continuar de todas formas?`;
-        
-        if (!confirm(confirmMsg)) {
-            return;
+    // Cargar participante existente y hacer merge (no reemplazar picks ya guardados)
+    const existingParticipant = await storage.get(`participant:${name}`);
+    const existingPredictions = existingParticipant ? existingParticipant.predictions : [];
+
+    const mergedPredictions = [...existingPredictions];
+    newPredictions.forEach(np => {
+        if (!mergedPredictions.find(p => p.matchId === np.matchId)) {
+            mergedPredictions.push(np);
         }
-    }
+    });
 
-    // Predicciones de partidos
-    const predictions = matches.map(match => ({
-        matchId: match.id,
-        score1: parseInt(document.getElementById(`score1-${match.id}`)?.value) || 0,
-        score2: parseInt(document.getElementById(`score2-${match.id}`)?.value) || 0,
-        locked: isMatchLocked(match)
-    }));
-
-    // Predicciones especiales
+    // Predicciones especiales (solo actualizar si se llenaron)
+    const champVal = document.getElementById('predChampion')?.value.trim();
+    const runnerVal = document.getElementById('predRunnerUp')?.value.trim();
+    const scorerVal = document.getElementById('predTopScorer')?.value.trim();
+    const goalsVal = document.getElementById('predTotalGoals')?.value;
+    const prevSpecial = existingParticipant?.specialPredictions || {};
     const specialPredictions = {
-        champion: document.getElementById('predChampion')?.value.trim() || '',
-        runnerUp: document.getElementById('predRunnerUp')?.value.trim() || '',
-        topScorer: document.getElementById('predTopScorer')?.value.trim() || '',
-        totalGoals: parseInt(document.getElementById('predTotalGoals')?.value) || 0
+        champion: champVal || prevSpecial.champion || '',
+        runnerUp: runnerVal || prevSpecial.runnerUp || '',
+        topScorer: scorerVal || prevSpecial.topScorer || '',
+        totalGoals: goalsVal !== '' ? parseInt(goalsVal) || 0 : (prevSpecial.totalGoals ?? 0)
     };
 
     const participant = {
         name,
-        predictions,
+        predictions: mergedPredictions,
         specialPredictions,
         timestamp: Date.now()
     };
 
     await storage.set(`participant:${name}`, participant);
 
-    // Recargar datos inmediatamente
+    // Recargar datos
     await init();
 
-    showToast(`✅ Predicciones guardadas para ${name}`);
+    showToast(`✅ ${newPredictions.length} predicción(es) guardadas para ${name}`);
 }
 
 // Guardar resultados reales
