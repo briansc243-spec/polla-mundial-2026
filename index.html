@@ -33,7 +33,7 @@
                     <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña" autocomplete="current-password">
                 </div>
                 <div id="loginError" class="login-error" style="display: none;"></div>
-                <button class="btn btn-login" onclick="handleLogin()">Ingresar</button>
+                <button class="btn btn-login" id="loginBtn" onclick="handleLogin()">Ingresar</button>
             </div>
             
             <div class="login-footer">
@@ -78,10 +78,86 @@
         </div>
     </div>
 
-    <!-- Botón de logout (fuera del contenedor principal) -->
-    <button class="logout-btn" id="logoutBtn" onclick="logout()" title="Cerrar sesión" style="display: none;">
-        <span>🚪 Salir</span>
-    </button>
+    <!-- Botones de cabecera (logout, cambiar pwd, admin usuarios) -->
+    <div id="headerBtns" style="display:none; position:fixed; top:14px; right:14px; z-index:1000; display:none; gap:8px; align-items:center;">
+        <button id="adminUsersBtn" onclick="openAdminUsersModal()" title="Gestión de usuarios"
+            style="display:none; background:rgba(255,215,0,0.12); border:1px solid rgba(255,215,0,0.4); color:#FFD700; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:600;">
+            👥 Usuarios
+        </button>
+        <button id="changePwdBtn" onclick="openChangePwdModal()" title="Cambiar contraseña"
+            style="display:none; background:rgba(0,217,255,0.1); border:1px solid rgba(0,217,255,0.35); color:var(--primary,#00D9FF); padding:8px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:600;">
+            🔑 Contraseña
+        </button>
+        <button class="logout-btn" id="logoutBtn" onclick="logout()" title="Cerrar sesión">
+            <span>🚪 Salir</span>
+        </button>
+    </div>
+
+    <!-- Modal: Cambiar Contraseña -->
+    <div id="changePwdModal" style="display:none; position:fixed; inset:0; background:rgba(10,14,39,0.92); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:var(--dark-2,#131929); border:1px solid rgba(0,217,255,0.3); border-radius:20px; padding:36px 32px; max-width:400px; width:90%; box-shadow:0 0 40px rgba(0,217,255,0.15);">
+            <h2 style="color:var(--primary,#00D9FF); font-family:'Bebas Neue',sans-serif; font-size:1.6rem; margin:0 0 20px; text-align:center;">🔑 Cambiar Contraseña</h2>
+            <div class="form-group" style="margin-bottom:14px;">
+                <label style="font-size:0.85rem; color:#A0A8C0;">Contraseña actual</label>
+                <input type="password" id="changePwdCurrent" placeholder="Tu contraseña actual" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+            </div>
+            <div class="form-group" style="margin-bottom:14px;">
+                <label style="font-size:0.85rem; color:#A0A8C0;">Nueva contraseña</label>
+                <input type="password" id="changePwdNew" placeholder="Mínimo 6 caracteres" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+                <label style="font-size:0.85rem; color:#A0A8C0;">Confirmar nueva contraseña</label>
+                <input type="password" id="changePwdConfirm" placeholder="Repite la nueva contraseña" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none;">
+            </div>
+            <div id="changePwdError" style="color:#FF3366; font-size:0.85rem; min-height:20px; margin-bottom:14px;"></div>
+            <button onclick="changePassword()" style="width:100%; padding:13px; background:linear-gradient(135deg,#00D9FF,#0099CC); border:none; border-radius:10px; color:#0A0E27; font-weight:700; font-size:0.95rem; cursor:pointer; margin-bottom:10px;">
+                ✅ Actualizar contraseña
+            </button>
+            <button onclick="closeChangePwdModal()" style="width:100%; padding:10px; background:transparent; border:1px solid rgba(255,255,255,0.15); border-radius:10px; color:#A0A8C0; font-size:0.9rem; cursor:pointer;">
+                Cancelar
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Gestión de Usuarios (admin) -->
+    <div id="adminUsersModal" style="display:none; position:fixed; inset:0; background:rgba(10,14,39,0.92); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:var(--dark-2,#131929); border:1px solid rgba(255,215,0,0.3); border-radius:20px; padding:32px 28px; max-width:500px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 0 40px rgba(255,215,0,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h2 style="color:#FFD700; font-family:'Bebas Neue',sans-serif; font-size:1.6rem; margin:0;">👥 Gestión de Usuarios</h2>
+                <button onclick="closeAdminUsersModal()" style="background:rgba(255,255,255,0.08); border:none; color:#A0A8C0; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1.1rem;">✕</button>
+            </div>
+
+            <!-- Lista de usuarios -->
+            <h4 style="color:#A0A8C0; font-size:0.85rem; letter-spacing:1px; margin:0 0 10px;">USUARIOS ACTUALES</h4>
+            <div id="adminUsersContainer" style="margin-bottom:24px;"></div>
+
+            <!-- Crear usuario -->
+            <h4 style="color:#A0A8C0; font-size:0.85rem; letter-spacing:1px; margin:0 0 12px;">CREAR NUEVO USUARIO</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <input type="text" id="newUserName" placeholder="Usuario (sin espacios)" style="padding:11px 13px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.9rem; outline:none;">
+                <input type="password" id="newUserPassword" placeholder="Contraseña inicial" style="padding:11px 13px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.9rem; outline:none;">
+            </div>
+            <select id="newUserRole" style="width:100%; padding:11px 13px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.9rem; outline:none; margin-bottom:10px;">
+                <option value="user">👤 Usuario</option>
+                <option value="admin">👑 Admin</option>
+            </select>
+            <div id="adminUserError" style="color:#FF3366; font-size:0.85rem; min-height:18px; margin-bottom:8px;"></div>
+            <button onclick="adminCreateUser()" style="width:100%; padding:12px; background:linear-gradient(135deg,#FFD700,#FFA500); border:none; border-radius:10px; color:#0A0E27; font-weight:700; font-size:0.95rem; cursor:pointer;">
+                ➕ Crear Usuario
+            </button>
+
+            <!-- Reset contraseña -->
+            <h4 style="color:#A0A8C0; font-size:0.85rem; letter-spacing:1px; margin:20px 0 12px;">RESTABLECER CONTRASEÑA</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <input type="text" id="resetUserName" placeholder="Usuario" style="padding:11px 13px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.9rem; outline:none;">
+                <input type="password" id="resetUserPassword" placeholder="Nueva contraseña" style="padding:11px 13px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; font-size:0.9rem; outline:none;">
+            </div>
+            <div id="adminResetError" style="color:#FF3366; font-size:0.85rem; min-height:18px; margin-bottom:8px;"></div>
+            <button onclick="adminResetPassword()" style="width:100%; padding:12px; background:rgba(255,50,50,0.15); border:1px solid rgba(255,80,80,0.4); border-radius:10px; color:#FF6B6B; font-weight:700; font-size:0.9rem; cursor:pointer;">
+                🔄 Restablecer Contraseña
+            </button>
+        </div>
+    </div>
 
     <div class="container" id="mainApp" style="display: none;">
         <!-- Logo ProntoPaga fijo arriba derecha -->

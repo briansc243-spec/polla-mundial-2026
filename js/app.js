@@ -1,19 +1,34 @@
 // ========================================
-// SISTEMA DE LOGIN
+// SISTEMA DE LOGIN — usuarios en Supabase
 // ========================================
 
-// Credenciales (puedes cambiarlas aquí o crear sistema de múltiples usuarios)
-const VALID_CREDENTIALS = {
-    'admin': 'Adm!n@2026',
-    'brian': 'Br!an@2026',
-    'oscar': '0sc4r@2026'
-};
+// Hash SHA-256 para contraseñas (no se guardan en texto plano)
+async function hashPassword(password) {
+    const data = new TextEncoder().encode(password);
+    const buf  = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Usuarios por defecto si la tabla está vacía (primera vez)
+const DEFAULT_USERS = [
+    { username: 'admin', password: 'Adm!n@2026', role: 'admin' },
+    { username: 'brian', password: 'Br!an@2026', role: 'user'  },
+    { username: 'oscar', password: '0sc4r@2026', role: 'user'  }
+];
+
+async function seedUsersIfNeeded() {
+    const { data } = await db().from('polla_users').select('username').limit(1);
+    if (data && data.length > 0) return;
+    for (const u of DEFAULT_USERS) {
+        const hash = await hashPassword(u.password);
+        await db().from('polla_users').upsert({ username: u.username, password_hash: hash, role: u.role });
+    }
+}
 
 // Verificar si ya hay sesión activa
 function checkSession() {
     const isLoggedIn = sessionStorage.getItem('pollaLoggedIn');
     const loggedUser = sessionStorage.getItem('pollaUser');
-    
     if (isLoggedIn === 'true' && loggedUser) {
         showMainApp();
         return true;
@@ -21,29 +36,159 @@ function checkSession() {
     return false;
 }
 
-// Manejar login
-function handleLogin() {
-    const username = document.getElementById('loginUser').value.trim();
+// Manejar login (async — verifica contra Supabase)
+async function handleLogin() {
+    const username = document.getElementById('loginUser').value.trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
 
-    // Validar campos vacíos
     if (!username || !password) {
         showLoginError('Por favor completa todos los campos');
         return;
     }
 
-    // Validar credenciales
-    if (VALID_CREDENTIALS[username] && VALID_CREDENTIALS[username] === password) {
-        // Login exitoso
+    const btn = document.getElementById('loginBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
+
+    try {
+        await seedUsersIfNeeded();
+
+        const { data, error } = await db()
+            .from('polla_users')
+            .select('username, password_hash, role')
+            .eq('username', username)
+            .maybeSingle();
+
+        if (error || !data) {
+            showLoginError('❌ Usuario o contraseña incorrectos');
+            return;
+        }
+
+        const hash = await hashPassword(password);
+        if (hash !== data.password_hash) {
+            showLoginError('❌ Usuario o contraseña incorrectos');
+            return;
+        }
+
         sessionStorage.setItem('pollaLoggedIn', 'true');
-        sessionStorage.setItem('pollaUser', username);
-        
-        // Mostrar aplicación
+        sessionStorage.setItem('pollaUser', data.username);
+        sessionStorage.setItem('pollaRole', data.role);
         showMainApp();
-    } else {
-        showLoginError('❌ Usuario o contraseña incorrectos');
+    } catch (e) {
+        showLoginError('⚠️ Error de conexión. Intenta de nuevo.');
+        console.error(e);
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Ingresar'; }
     }
+}
+
+// ── Cambiar contraseña (usuario actual) ────────────────────────────────────
+function openChangePwdModal() {
+    document.getElementById('changePwdCurrent').value = '';
+    document.getElementById('changePwdNew').value = '';
+    document.getElementById('changePwdConfirm').value = '';
+    document.getElementById('changePwdError').textContent = '';
+    document.getElementById('changePwdModal').style.display = 'flex';
+}
+function closeChangePwdModal() {
+    document.getElementById('changePwdModal').style.display = 'none';
+}
+
+async function changePassword() {
+    const username   = sessionStorage.getItem('pollaUser');
+    const currentPwd = document.getElementById('changePwdCurrent').value;
+    const newPwd     = document.getElementById('changePwdNew').value;
+    const confirmPwd = document.getElementById('changePwdConfirm').value;
+    const errDiv     = document.getElementById('changePwdError');
+
+    if (!currentPwd || !newPwd || !confirmPwd) { errDiv.textContent = 'Completa todos los campos'; return; }
+    if (newPwd !== confirmPwd)                  { errDiv.textContent = 'Las contraseñas nuevas no coinciden'; return; }
+    if (newPwd.length < 6)                      { errDiv.textContent = 'Mínimo 6 caracteres'; return; }
+
+    const { data } = await db().from('polla_users').select('password_hash').eq('username', username).maybeSingle();
+    const currentHash = await hashPassword(currentPwd);
+    if (!data || data.password_hash !== currentHash) { errDiv.textContent = '❌ Contraseña actual incorrecta'; return; }
+
+    const newHash = await hashPassword(newPwd);
+    await db().from('polla_users').update({ password_hash: newHash }).eq('username', username);
+    closeChangePwdModal();
+    showToast('✅ Contraseña actualizada');
+}
+
+// ── Gestión de usuarios (solo admin) ───────────────────────────────────────
+function openAdminUsersModal() {
+    document.getElementById('adminUsersModal').style.display = 'flex';
+    renderAdminUsers();
+}
+function closeAdminUsersModal() {
+    document.getElementById('adminUsersModal').style.display = 'none';
+}
+
+async function renderAdminUsers() {
+    const container = document.getElementById('adminUsersContainer');
+    container.innerHTML = '<p style="color:#A0A8C0; font-size:0.85rem;">Cargando...</p>';
+    const { data } = await db().from('polla_users').select('username, role').order('username');
+    if (!data || data.length === 0) { container.innerHTML = '<p style="color:#A0A8C0;">Sin usuarios.</p>'; return; }
+    container.innerHTML = data.map(u => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:rgba(255,255,255,0.04); border-radius:8px; margin-bottom:8px;">
+            <div>
+                <span style="font-weight:600; color:#E0E6F8;">${u.username}</span>
+                <span style="margin-left:8px; font-size:0.78rem; color:${u.role === 'admin' ? '#FFD700' : '#A0A8C0'};">${u.role === 'admin' ? '👑 admin' : '👤 usuario'}</span>
+            </div>
+            ${u.username !== 'admin'
+                ? `<button onclick="adminDeleteUser('${u.username}')" style="background:rgba(255,50,50,0.12); border:1px solid rgba(255,80,80,0.35); color:#FF6B6B; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem;">🗑️ Eliminar</button>`
+                : '<span style="color:#A0A8C0; font-size:0.78rem;">protegido</span>'}
+        </div>
+    `).join('');
+}
+
+async function adminCreateUser() {
+    const username = document.getElementById('newUserName').value.trim().toLowerCase();
+    const password = document.getElementById('newUserPassword').value;
+    const role     = document.getElementById('newUserRole').value;
+    const errDiv   = document.getElementById('adminUserError');
+
+    if (!username || !password) { errDiv.textContent = 'Completa usuario y contraseña'; return; }
+    if (!/^[a-z0-9_]+$/.test(username)) { errDiv.textContent = 'Solo letras, números y guión bajo'; return; }
+    if (password.length < 6) { errDiv.textContent = 'Mínimo 6 caracteres'; return; }
+
+    const { data: exists } = await db().from('polla_users').select('username').eq('username', username).maybeSingle();
+    if (exists) { errDiv.textContent = '❌ Ese usuario ya existe'; return; }
+
+    const hash = await hashPassword(password);
+    const { error } = await db().from('polla_users').insert({ username, password_hash: hash, role });
+    if (error) { errDiv.textContent = '❌ Error al crear usuario'; return; }
+
+    document.getElementById('newUserName').value = '';
+    document.getElementById('newUserPassword').value = '';
+    errDiv.textContent = '';
+    showToast(`✅ Usuario "${username}" creado`);
+    renderAdminUsers();
+}
+
+async function adminDeleteUser(username) {
+    if (!confirm(`¿Eliminar al usuario "${username}"?`)) return;
+    await db().from('polla_users').delete().eq('username', username);
+    showToast(`🗑️ "${username}" eliminado`);
+    renderAdminUsers();
+}
+
+async function adminResetPassword() {
+    const username = document.getElementById('resetUserName').value.trim().toLowerCase();
+    const password = document.getElementById('resetUserPassword').value;
+    const errDiv   = document.getElementById('adminResetError');
+
+    if (!username || !password) { errDiv.textContent = 'Completa usuario y nueva contraseña'; return; }
+    if (password.length < 6)    { errDiv.textContent = 'Mínimo 6 caracteres'; return; }
+
+    const { data: exists } = await db().from('polla_users').select('username').eq('username', username).maybeSingle();
+    if (!exists) { errDiv.textContent = '❌ Usuario no encontrado'; return; }
+
+    const hash = await hashPassword(password);
+    await db().from('polla_users').update({ password_hash: hash }).eq('username', username);
+    document.getElementById('resetUserName').value = '';
+    document.getElementById('resetUserPassword').value = '';
+    errDiv.textContent = '';
+    showToast(`✅ Contraseña de "${username}" restablecida`);
 }
 
 // Mostrar error de login
@@ -138,9 +283,23 @@ function showToast(msg, duration = 3000) {
 }
 
 function applyRoleUI(username) {
-    const isAdmin = username === 'admin';
+    const isAdmin = sessionStorage.getItem('pollaRole') === 'admin' || username === 'admin';
+
     const resultsTab = document.getElementById('resultsTab');
     if (resultsTab) resultsTab.style.display = isAdmin ? 'flex' : 'none';
+
+    // Mostrar barra de botones de cabecera
+    const headerBtns = document.getElementById('headerBtns');
+    if (headerBtns) headerBtns.style.display = 'flex';
+
+    const changePwdBtn = document.getElementById('changePwdBtn');
+    if (changePwdBtn) changePwdBtn.style.display = 'block';
+
+    const adminUsersBtn = document.getElementById('adminUsersBtn');
+    if (adminUsersBtn) adminUsersBtn.style.display = isAdmin ? 'block' : 'none';
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.style.display = 'block';
 }
 
 function lockParticipantName(name) {
@@ -153,9 +312,8 @@ function lockParticipantName(name) {
 // Cerrar sesión
 function logout() {
     if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-        sessionStorage.removeItem('pollaLoggedIn');
-        sessionStorage.removeItem('pollaUser');
-        document.getElementById('logoutBtn').style.display = 'none';
+        sessionStorage.clear();
+        document.getElementById('headerBtns').style.display = 'none';
         location.reload();
     }
 }
