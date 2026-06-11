@@ -984,13 +984,14 @@ function renderMatches() {
                     // Live score badge
                     const liveKey = `${stripFlag(match.team1)}|${stripFlag(match.team2)}`;
                     const live = liveScores[liveKey];
+                    const savedResult = results.find(r => r.matchId === match.id);
                     let liveBadge = '';
-                    if (live && live.status === 'IN_PLAY') {
+                    if (savedResult) {
+                        liveBadge = `<span style="background:rgba(0,217,255,0.1); border:1px solid #00D9FF; color:#00D9FF; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`;
+                    } else if (live && live.status === 'IN_PLAY') {
                         liveBadge = `<span style="background:rgba(0,255,136,0.15); border:1px solid #00FF88; color:#00FF88; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; animation:pulse 1.5s infinite;">⚽ ${live.home_score}-${live.away_score} · ${live.minute || ''}' EN VIVO</span>`;
                     } else if (live && live.status === 'PAUSED') {
                         liveBadge = `<span style="background:rgba(255,215,0,0.15); border:1px solid #FFD700; color:#FFD700; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">⏸ ${live.home_score}-${live.away_score} · DESCANSO</span>`;
-                    } else if (live && live.status === 'FINISHED') {
-                        liveBadge = `<span style="background:rgba(0,217,255,0.1); border:1px solid #00D9FF; color:#00D9FF; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">✅ ${live.home_score}-${live.away_score} · FINAL</span>`;
                     }
 
                     return `
