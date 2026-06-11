@@ -2,6 +2,14 @@
 // SISTEMA DE LOGIN — usuarios en Supabase
 // ========================================
 
+async function logAction(username, action, detail = {}) {
+    try {
+        await db().from('polla_logs').insert({ username, action, detail });
+    } catch (e) {
+        console.warn('Log error:', e);
+    }
+}
+
 
 
 // Verificar si ya hay sesión activa
@@ -48,6 +56,7 @@ async function handleLogin() {
         sessionStorage.setItem('pollaLoggedIn', 'true');
         sessionStorage.setItem('pollaUser', data.username);
         sessionStorage.setItem('pollaRole', data.role);
+        logAction(data.username, 'login');
         showMainApp();
     } catch (e) {
         showLoginError('⚠️ Error de conexión. Intenta de nuevo.');
@@ -111,6 +120,7 @@ async function changePassword() {
     if (!data || data.password_hash !== currentPwd) { errDiv.textContent = '❌ Contraseña actual incorrecta'; return; }
 
     await db().from('polla_users').update({ password_hash: newPwd }).eq('username', username);
+    logAction(username, 'change_password');
     closeChangePwdModal();
     showToast('✅ Contraseña actualizada');
 }
@@ -158,6 +168,7 @@ async function adminCreateUser() {
     const { error } = await db().from('polla_users').insert({ username, password_hash: password, role });
     if (error) { errDiv.textContent = '❌ Error al crear usuario'; return; }
 
+    logAction(sessionStorage.getItem('pollaUser'), 'create_user', { created: username, role });
     document.getElementById('newUserName').value = '';
     document.getElementById('newUserPassword').value = '';
     errDiv.textContent = '';
@@ -168,8 +179,56 @@ async function adminCreateUser() {
 async function adminDeleteUser(username) {
     if (!confirm(`¿Eliminar al usuario "${username}"?`)) return;
     await db().from('polla_users').delete().eq('username', username);
+    logAction(sessionStorage.getItem('pollaUser'), 'delete_user', { deleted: username });
     showToast(`🗑️ "${username}" eliminado`);
     renderAdminUsers();
+}
+
+async function loadLogs() {
+    const container = document.getElementById('adminLogsContainer');
+    const filterUser = document.getElementById('logFilterUser').value.trim().toLowerCase();
+    container.innerHTML = '<p style="color:#A0A8C0; font-size:0.82rem;">Cargando...</p>';
+
+    let query = db().from('polla_logs').select('*').order('created_at', { ascending: false }).limit(100);
+    if (filterUser) query = query.ilike('username', `%${filterUser}%`);
+
+    const { data, error } = await query;
+    if (error || !data || data.length === 0) {
+        container.innerHTML = '<p style="color:#A0A8C0; font-size:0.82rem;">Sin registros.</p>';
+        return;
+    }
+
+    const actionLabels = {
+        login:           '🔑 Login',
+        change_password: '🔒 Cambió contraseña',
+        create_user:     '➕ Creó usuario',
+        delete_user:     '🗑️ Eliminó usuario',
+        reset_password:  '🔄 Restableció contraseña',
+        save_predictions:'💾 Guardó predicciones',
+        save_special:    '🏆 Guardó predicciones especiales',
+        save_results:    '⚡ Guardó resultados',
+    };
+
+    container.innerHTML = data.map(log => {
+        const date = new Date(log.created_at).toLocaleString('es-PE', { timeZone: 'America/Lima' });
+        const label = actionLabels[log.action] || log.action;
+        let detail = '';
+        if (log.detail) {
+            if (log.action === 'save_predictions') detail = `· ${log.detail.count} partido(s)`;
+            else if (log.action === 'create_user')  detail = `· creó: ${log.detail.created}`;
+            else if (log.action === 'delete_user')  detail = `· eliminó: ${log.detail.deleted}`;
+            else if (log.action === 'reset_password') detail = `· para: ${log.detail.target}`;
+            else if (log.action === 'save_results') detail = `· ${log.detail.count} resultado(s)`;
+        }
+        return `
+            <div style="padding:8px 12px; background:rgba(255,255,255,0.03); border-radius:6px; margin-bottom:6px; font-size:0.82rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#E0E6F8; font-weight:600;">${log.username}</span>
+                    <span style="color:#A0A8C0; font-size:0.75rem;">${date}</span>
+                </div>
+                <div style="color:#00D9FF; margin-top:2px;">${label} <span style="color:#A0A8C0;">${detail}</span></div>
+            </div>`;
+    }).join('');
 }
 
 async function adminResetPassword() {
@@ -184,6 +243,7 @@ async function adminResetPassword() {
     if (!exists) { errDiv.textContent = '❌ Usuario no encontrado'; return; }
 
     await db().from('polla_users').update({ password_hash: password }).eq('username', username);
+    logAction(sessionStorage.getItem('pollaUser'), 'reset_password', { target: username });
     document.getElementById('resetUserName').value = '';
     document.getElementById('resetUserPassword').value = '';
     errDiv.textContent = '';
@@ -685,6 +745,7 @@ async function saveSpecialPredictions() {
     };
 
     await storage.set(`participant:${displayName}`, participant);
+    logAction(username, 'save_special', { display_name: displayName, specialPredictions });
     await init();
     showToast('✅ Predicciones especiales guardadas');
 }
@@ -972,6 +1033,11 @@ async function submitPredictions() {
     };
 
     await storage.set(`participant:${name}`, participant);
+    logAction(sessionStorage.getItem('pollaUser'), 'save_predictions', {
+        display_name: name,
+        count: newPredictions.length,
+        matches: newPredictions.map(p => ({ matchId: p.matchId, score: `${p.score1}-${p.score2}` }))
+    });
 
     // Recargar datos
     await init();
@@ -995,7 +1061,11 @@ async function saveResults() {
     }).filter(r => r.score1 !== null && r.score2 !== null);
 
     await storage.set('results', results);
-    
+    logAction(sessionStorage.getItem('pollaUser'), 'save_results', {
+        count: results.length,
+        results: results.map(r => ({ matchId: r.matchId, score: `${r.score1}-${r.score2}` }))
+    });
+
     alert('✅ Resultados guardados correctamente');
     await init();
 }
