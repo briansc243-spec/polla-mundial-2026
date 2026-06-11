@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
-</head>
 <body>
     <!-- Pantalla de Login -->
     <div id="loginScreen" class="login-screen">
@@ -44,6 +43,39 @@
         </div>
     </div>
 
+    <!-- Modal: nombre de participante (primera vez) -->
+    <div id="displayNameModal" style="display:none; position:fixed; inset:0; background:rgba(10,14,39,0.92); z-index:9999; display:none; align-items:center; justify-content:center;">
+        <div style="background:var(--dark-2,#131929); border:1px solid var(--primary,#00D9FF); border-radius:20px; padding:40px 32px; max-width:420px; width:90%; text-align:center; box-shadow:0 0 40px rgba(0,217,255,0.15);">
+            <div style="font-size:2.5rem; margin-bottom:12px;">👤</div>
+            <h2 style="color:var(--primary,#00D9FF); font-family:'Bebas Neue',sans-serif; font-size:1.8rem; margin-bottom:8px;">¡Bienvenido!</h2>
+            <p style="color:#A0A8C0; margin-bottom:24px; font-size:0.95rem;">¿Con qué nombre aparecerás en las predicciones?</p>
+            <input type="text" id="displayNameInput" placeholder="Tu nombre completo" autocomplete="off"
+                style="width:100%; padding:14px 16px; background:rgba(0,217,255,0.06); border:1px solid rgba(0,217,255,0.3); border-radius:10px; color:#fff; font-size:1rem; box-sizing:border-box; outline:none; margin-bottom:8px;">
+            <div id="displayNameError" style="color:#FF3366; font-size:0.85rem; min-height:20px; margin-bottom:12px;"></div>
+            <button onclick="confirmDisplayName()"
+                style="width:100%; padding:14px; background:linear-gradient(135deg,#00D9FF,#0099CC); border:none; border-radius:10px; color:#0A0E27; font-weight:700; font-size:1rem; cursor:pointer; letter-spacing:1px;">
+                ✅ Confirmar nombre
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Partidos de Hoy -->
+    <div id="todayMatchesModal" style="display:none; position:fixed; inset:0; background:rgba(10,14,39,0.92); z-index:9998; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:var(--dark-2,#131929); border:1px solid rgba(0,217,255,0.3); border-radius:20px; padding:28px 24px; max-width:480px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 0 50px rgba(0,217,255,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div>
+                    <h2 style="color:var(--primary,#00D9FF); font-family:'Bebas Neue',sans-serif; font-size:1.6rem; margin:0;">⚽ Partidos de Hoy</h2>
+                    <p id="todayDateLabel" style="color:#A0A8C0; font-size:0.85rem; margin:4px 0 0;"></p>
+                </div>
+                <button onclick="closeTodayModal()" style="background:rgba(255,255,255,0.08); border:none; color:#A0A8C0; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">✕</button>
+            </div>
+            <div id="todayMatchesList"></div>
+            <button onclick="closeTodayModal()" style="width:100%; margin-top:20px; padding:12px; background:linear-gradient(135deg,#00D9FF,#0099CC); border:none; border-radius:10px; color:#0A0E27; font-weight:700; font-size:0.95rem; cursor:pointer; letter-spacing:1px;">
+                Entendido
+            </button>
+        </div>
+    </div>
+
     <!-- Botón de logout (fuera del contenedor principal) -->
     <button class="logout-btn" id="logoutBtn" onclick="logout()" title="Cerrar sesión" style="display: none;">
         <span>🚪 Salir</span>
@@ -70,13 +102,16 @@
             <button class="tab-btn active" onclick="switchTab('predictions')">
                 <span>📝 Predicciones</span>
             </button>
+            <button class="tab-btn" onclick="switchTab('myPredictions')">
+                <span>📋 Mis Picks</span>
+            </button>
             <button class="tab-btn" onclick="switchTab('groups')">
                 <span>🌍 Grupos</span>
             </button>
             <button class="tab-btn" onclick="switchTab('leaderboard')">
                 <span>🏆 Tabla</span>
             </button>
-            <button class="tab-btn" onclick="switchTab('results')">
+            <button id="resultsTab" class="tab-btn" onclick="switchTab('results')" style="display:none;">
                 <span>⚡ Resultados</span>
             </button>
             <button class="tab-btn" onclick="switchTab('stats')">
@@ -125,16 +160,29 @@
                 </p>
                 <div id="matchesContainer"></div>
 
-                <div style="margin-top: 30px; padding: 20px; background: rgba(0, 217, 255, 0.1); border-radius: 12px; border-left: 3px solid var(--primary);">
+                <div style="margin-top: 30px; padding: 20px; background: rgba(0, 217, 255, 0.1); border-radius: 12px; border-left: 3px solid var(--primary); margin-bottom: 90px;">
                     <p style="color: var(--text); margin: 0;">
-                        ⚠️ <strong>Importante:</strong> Asegúrate de completar todas las predicciones antes de guardar. 
+                        ⚠️ <strong>Importante:</strong> Asegúrate de completar todas las predicciones antes de guardar.
                         Una vez guardadas, no podrás modificarlas con el mismo nombre.
                     </p>
                 </div>
 
-                <button class="btn" onclick="submitPredictions()" style="margin-top: 25px; width: 100%; padding: 20px; font-size: 1.2rem;">
-                    💾 Guardar Todas las Predicciones
-                </button>
+            </div>
+        </div>
+
+        <!-- Botón guardar predicciones (sticky) -->
+        <div class="save-btn-sticky" id="saveBtnStickyWrapper" style="display:none;">
+            <button class="btn" onclick="submitPredictions()" id="savePredictionsBtn">
+                💾 Guardar Todas las Predicciones
+            </button>
+        </div>
+
+        <!-- TAB: MIS PREDICCIONES -->
+        <div id="myPredictions" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">📋 Mis Predicciones</h2>
+                <p id="myPredictionsSubtitle" style="color:var(--text-dim); margin-bottom:20px; font-size:0.9rem;"></p>
+                <div id="myPredictionsContainer"></div>
             </div>
         </div>
 
@@ -1939,7 +1987,7 @@
             <div class="card">
                 <h2 class="card-title">Ingresar Resultados Reales</h2>
                 <div id="resultsContainer"></div>
-                <button class="btn btn-secondary" onclick="saveResults()">Guardar Resultados</button>
+                <button id="saveResultsBtn" class="btn btn-secondary" onclick="saveResults()" style="display:none;">Guardar Resultados</button>
             </div>
         </div>
 
@@ -1952,15 +2000,19 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="totalPredictions">0</div>
-                    <div class="stat-label">Predicciones</div>
+                    <div class="stat-label">Mis predicciones</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="avgScore">0</div>
-                    <div class="stat-label">Promedio Puntos</div>
+                    <div class="stat-label">Mis puntos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="topScore">0</div>
-                    <div class="stat-label">Puntaje Más Alto</div>
+                    <div class="stat-label">Mis exactos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="myRank">-</div>
+                    <div class="stat-label">Mi posición</div>
                 </div>
             </div>
 
@@ -1980,7 +2032,6 @@
         </div>
     </div>
 
-    <script>
     <script src="js/app.js"></script>
 </body>
 </html>
