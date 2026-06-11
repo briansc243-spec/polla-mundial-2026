@@ -131,8 +131,9 @@
                 </div>
 
                 <!-- Predicciones Especiales -->
-                <div class="special-predictions-container">
+                <div class="special-predictions-container" id="specialPredictionsSection">
                     <h3 class="section-subtitle">🏆 Predicciones Especiales</h3>
+                    <div id="specialDeadlineBanner"></div>
                     <div class="special-predictions-grid">
                         <div class="form-group">
                             <label>🥇 Campeón del Mundial</label>
@@ -151,6 +152,9 @@
                             <input type="number" id="predTotalGoals" placeholder="Cantidad total de goles" min="0">
                         </div>
                     </div>
+                    <button class="btn btn-special-save" id="saveSpecialBtn" onclick="saveSpecialPredictions()">
+                        🏆 Guardar Predicciones Especiales
+                    </button>
                 </div>
 
                 <!-- Partidos por Grupo -->

@@ -1022,6 +1022,27 @@ input:focus, select:focus {
     gap: 20px;
 }
 
+.btn-special-save {
+    margin-top: 20px;
+    width: 100%;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #0A0E27;
+    font-weight: 700;
+}
+
+.btn-special-save:hover {
+    background: linear-gradient(135deg, #ffe033, #ffb733);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
+.btn-special-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .section-subtitle {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 1.8rem;

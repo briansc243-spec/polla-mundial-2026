@@ -358,6 +358,138 @@ function getTimeUntilLock(match) {
     }
 }
 
+// Deadline predicciones especiales: martes 16 jun 2026, fin del día PE
+const SPECIAL_DEADLINE = new Date('2026-06-17T00:00:00-05:00');
+
+function isSpecialDeadlinePassed() {
+    return new Date() >= SPECIAL_DEADLINE;
+}
+
+function initSpecialPredictions() {
+    const username = sessionStorage.getItem('pollaUser');
+    const displayName = localStorage.getItem(`pollaDisplayName:${username}`);
+    const me = participants.find(p => p.name === displayName);
+    const sp = me?.specialPredictions;
+    const alreadySaved = sp && (sp.champion || sp.runnerUp || sp.topScorer || sp.totalGoals);
+    const deadlinePassed = isSpecialDeadlinePassed();
+
+    const btn = document.getElementById('saveSpecialBtn');
+    const banner = document.getElementById('specialDeadlineBanner');
+    const fields = ['predChampion', 'predRunnerUp', 'predTopScorer', 'predTotalGoals'];
+
+    // Pre-llenar campos con datos guardados
+    if (sp) {
+        document.getElementById('predChampion').value = sp.champion || '';
+        document.getElementById('predRunnerUp').value = sp.runnerUp || '';
+        document.getElementById('predTopScorer').value = sp.topScorer || '';
+        document.getElementById('predTotalGoals').value = sp.totalGoals || '';
+    }
+
+    if (deadlinePassed) {
+        // Bloquear todo, sin importar si guardó o no
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.disabled = true; el.style.opacity = '0.6'; }
+        });
+        if (btn) btn.style.display = 'none';
+        if (banner) banner.innerHTML = `
+            <div style="background:rgba(255,50,50,0.1);border:1px solid rgba(255,80,80,0.4);border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#FF6B6B;font-size:0.88rem;">
+                🔒 El plazo para predicciones especiales venció el martes 16 de junio.
+            </div>`;
+    } else if (alreadySaved) {
+        // Ya guardó — mostrar bloqueado con opción de editar hasta el deadline
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.disabled = true; el.style.opacity = '0.7'; }
+        });
+        if (btn) {
+            btn.textContent = '✏️ Editar Predicciones Especiales';
+            btn.onclick = () => unlockSpecialPredictions();
+        }
+        if (banner) banner.innerHTML = `
+            <div style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#00FF88;font-size:0.88rem;">
+                ✅ Predicciones especiales guardadas. Puedes editarlas hasta el <strong>martes 16 de junio</strong>.
+            </div>`;
+    } else {
+        // Nunca guardó — mostrar deadline
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.disabled = false; el.style.opacity = '1'; }
+        });
+        if (btn) {
+            btn.textContent = '🏆 Guardar Predicciones Especiales';
+            btn.onclick = saveSpecialPredictions;
+            btn.disabled = false;
+        }
+        if (banner) {
+            const msLeft = SPECIAL_DEADLINE - new Date();
+            const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+            const hoursLeft = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            banner.innerHTML = `
+                <div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.35);border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#FFD700;font-size:0.88rem;">
+                    ⏳ Tienes hasta el <strong>martes 16 de junio</strong> para guardar.
+                    Faltan <strong>${daysLeft > 0 ? daysLeft + 'd ' : ''}${hoursLeft}h</strong>.
+                </div>`;
+        }
+    }
+}
+
+function unlockSpecialPredictions() {
+    const fields = ['predChampion', 'predRunnerUp', 'predTopScorer', 'predTotalGoals'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.disabled = false; el.style.opacity = '1'; }
+    });
+    const btn = document.getElementById('saveSpecialBtn');
+    if (btn) {
+        btn.textContent = '🏆 Guardar Predicciones Especiales';
+        btn.onclick = saveSpecialPredictions;
+    }
+}
+
+async function saveSpecialPredictions() {
+    if (isSpecialDeadlinePassed()) {
+        showToast('🔒 El plazo venció el martes 16 de junio');
+        return;
+    }
+
+    const username = sessionStorage.getItem('pollaUser');
+    const displayName = localStorage.getItem(`pollaDisplayName:${username}`);
+    if (!displayName) {
+        showToast('⚠️ Registra tu nombre primero');
+        return;
+    }
+
+    const champVal = document.getElementById('predChampion')?.value.trim();
+    const runnerVal = document.getElementById('predRunnerUp')?.value.trim();
+    const scorerVal = document.getElementById('predTopScorer')?.value.trim();
+    const goalsVal  = document.getElementById('predTotalGoals')?.value;
+
+    if (!champVal && !runnerVal && !scorerVal && !goalsVal) {
+        showToast('⚠️ Completa al menos un campo antes de guardar');
+        return;
+    }
+
+    const existing = await storage.get(`participant:${displayName}`);
+    const prevSpecial = existing?.specialPredictions || {};
+    const specialPredictions = {
+        champion:   champVal  || prevSpecial.champion  || '',
+        runnerUp:   runnerVal || prevSpecial.runnerUp  || '',
+        topScorer:  scorerVal || prevSpecial.topScorer || '',
+        totalGoals: goalsVal !== '' ? (parseInt(goalsVal) || 0) : (prevSpecial.totalGoals ?? 0)
+    };
+
+    const participant = {
+        ...(existing || { name: displayName, predictions: [] }),
+        specialPredictions,
+        timestamp: Date.now()
+    };
+
+    await storage.set(`participant:${displayName}`, participant);
+    await init();
+    showToast('✅ Predicciones especiales guardadas');
+}
+
 // Inicialización
 async function init() {
     // SIEMPRE usar los partidos predeterminados actualizados
@@ -386,6 +518,7 @@ async function init() {
     renderResults();
     updateLeaderboard();
     updateStats();
+    initSpecialPredictions();
 
     const username = sessionStorage.getItem('pollaUser');
     const shownKey = `todayMatchesShown:${username}`;
@@ -613,23 +746,11 @@ async function submitPredictions() {
         }
     });
 
-    // Predicciones especiales (solo actualizar si se llenaron)
-    const champVal = document.getElementById('predChampion')?.value.trim();
-    const runnerVal = document.getElementById('predRunnerUp')?.value.trim();
-    const scorerVal = document.getElementById('predTopScorer')?.value.trim();
-    const goalsVal = document.getElementById('predTotalGoals')?.value;
-    const prevSpecial = existingParticipant?.specialPredictions || {};
-    const specialPredictions = {
-        champion: champVal || prevSpecial.champion || '',
-        runnerUp: runnerVal || prevSpecial.runnerUp || '',
-        topScorer: scorerVal || prevSpecial.topScorer || '',
-        totalGoals: goalsVal !== '' ? parseInt(goalsVal) || 0 : (prevSpecial.totalGoals ?? 0)
-    };
-
+    // Preservar special predictions existentes sin tocarlas (tienen su propio botón)
     const participant = {
         name,
         predictions: mergedPredictions,
-        specialPredictions,
+        specialPredictions: existingParticipant?.specialPredictions || {},
         timestamp: Date.now()
     };
 
