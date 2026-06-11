@@ -637,6 +637,7 @@ async function saveSpecialPredictions() {
     const participant = {
         ...(existing || { name: displayName, predictions: [] }),
         specialPredictions,
+        username: sessionStorage.getItem('pollaUser'),
         timestamp: Date.now()
     };
 
@@ -666,10 +667,14 @@ async function init() {
                 const data = await storage.get(key);
                 if (data) loaded.push(data);
             }
-            // Deduplicar por nombre (por si acaso llegan duplicados)
-            participants = loaded.filter((p, i, arr) =>
-                arr.findIndex(x => x.name === p.name) === i
-            );
+            // Deduplicar por nombre y excluir al admin (no aparece en tabla/stats)
+            const seen = new Set();
+            participants = loaded.filter(p => {
+                if (p.username === 'admin') return false;
+                if (seen.has(p.name)) return false;
+                seen.add(p.name);
+                return true;
+            });
         } catch (error) {
             participants = [];
         }
@@ -917,6 +922,7 @@ async function submitPredictions() {
     // Preservar special predictions existentes sin tocarlas (tienen su propio botón)
     const participant = {
         name,
+        username: sessionStorage.getItem('pollaUser'),
         predictions: mergedPredictions,
         specialPredictions: existingParticipant?.specialPredictions || {},
         timestamp: Date.now()
