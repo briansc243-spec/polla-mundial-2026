@@ -577,8 +577,16 @@ async function fetchLiveScores() {
         const { data, error } = await db().functions.invoke('live-scores');
         if (error || !data?.matches) return;
 
-        liveScores = {};
-        data.matches.forEach(m => { liveScores[`${m.home_team}|${m.away_team}`] = m; });
+        // Actualizar liveScores sin hacer downgrade de status activo
+        // (el API gratuito a veces devuelve TIMED para partidos en curso)
+        const STATUS_RANK = { 'FINISHED': 4, 'IN_PLAY': 3, 'PAUSED': 2, 'TIMED': 0, 'SCHEDULED': 0 };
+        data.matches.forEach(m => {
+            const key = `${m.home_team}|${m.away_team}`;
+            const existing = liveScores[key];
+            const newRank = STATUS_RANK[m.status] ?? 0;
+            const existRank = existing ? (STATUS_RANK[existing.status] ?? 0) : 0;
+            if (newRank >= existRank) liveScores[key] = m;
+        });
 
         // Auto-guardar resultados finales y recalcular puntos
         let changed = false;
@@ -985,6 +993,10 @@ function renderMatches() {
                     const liveKey = `${stripFlag(match.team1)}|${stripFlag(match.team2)}`;
                     const live = liveScores[liveKey];
                     const savedResult = results.find(r => r.matchId === match.id);
+                    const matchStart = new Date(match.dateTime);
+                    const now = new Date();
+                    const minsSinceStart = (now - matchStart) / 60000;
+                    const isInTimeWindow = minsSinceStart >= 0 && minsSinceStart < 130;
                     let liveBadge = '';
                     if (savedResult) {
                         liveBadge = `<span style="background:rgba(0,217,255,0.1); border:1px solid #00D9FF; color:#00D9FF; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`;
@@ -992,6 +1004,8 @@ function renderMatches() {
                         liveBadge = `<span style="background:rgba(0,255,136,0.15); border:1px solid #00FF88; color:#00FF88; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; animation:pulse 1.5s infinite;">⚽ ${live.home_score}-${live.away_score} · ${live.minute || ''}' EN VIVO</span>`;
                     } else if (live && live.status === 'PAUSED') {
                         liveBadge = `<span style="background:rgba(255,215,0,0.15); border:1px solid #FFD700; color:#FFD700; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">⏸ ${live.home_score}-${live.away_score} · DESCANSO</span>`;
+                    } else if (isInTimeWindow) {
+                        liveBadge = `<span style="background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.4); color:#00FF88; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; animation:pulse 1.5s infinite;">⚽ EN CURSO</span>`;
                     }
 
                     return `
