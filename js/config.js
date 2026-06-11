@@ -4,5 +4,5 @@
 // 3. Copia "Project URL" y "anon public key" aquí abajo
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SUPABASE_URL      = 'https://TU-PROYECTO.supabase.co';
-const SUPABASE_ANON_KEY = 'TU-ANON-KEY-AQUI';
+const SUPABASE_URL      = 'https://wrnywkjdobouenvssrgm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indybnl3a2pkb2JvdWVudnNzcmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODQ5NDMsImV4cCI6MjA5Njc2MDk0M30.7C0tvYmDMyLZcViAxDT65iZmX3dNW3WGr0ewZZBOo9I';
