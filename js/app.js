@@ -185,10 +185,18 @@ async function showMainApp() {
 
     const username = sessionStorage.getItem('pollaUser');
 
-    // Intentar cache local primero, luego Supabase
+    // Intentar cache local → polla_users.display_name → polla_data (fallback)
     let savedName = localStorage.getItem(`pollaDisplayName:${username}`);
     if (!savedName) {
-        savedName = await storage.get(`displayName:${username}`);
+        const { data: userRow } = await db()
+            .from('polla_users')
+            .select('display_name')
+            .eq('username', username)
+            .maybeSingle();
+        savedName = userRow?.display_name || null;
+        if (!savedName) {
+            savedName = await storage.get(`displayName:${username}`);
+        }
         if (savedName) localStorage.setItem(`pollaDisplayName:${username}`, savedName);
     }
 
@@ -230,7 +238,11 @@ async function confirmDisplayName() {
 
     const username = sessionStorage.getItem('pollaUser');
     localStorage.setItem(`pollaDisplayName:${username}`, name);
-    await storage.set(`displayName:${username}`, name);
+    // Guardar en polla_users.display_name (fuente principal) y polla_data (fallback)
+    await Promise.all([
+        db().from('polla_users').update({ display_name: name }).eq('username', username),
+        storage.set(`displayName:${username}`, name)
+    ]);
 
     document.getElementById('displayNameModal').style.display = 'none';
     lockParticipantName(name);
