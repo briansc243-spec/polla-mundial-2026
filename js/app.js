@@ -61,6 +61,18 @@ async function handleLogin() {
 function openPointsModal()  { document.getElementById('pointsModal').style.display = 'flex'; }
 function closePointsModal() { document.getElementById('pointsModal').style.display = 'none'; }
 
+function togglePasswordVisibility() {
+    const input = document.getElementById('loginPassword');
+    const btn   = document.getElementById('eyeBtn');
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
 function openChangePwdModal() {
     document.getElementById('changePwdCurrent').value = '';
     document.getElementById('changePwdNew').value = '';
@@ -287,6 +299,13 @@ function applyRoleUI(username) {
 
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.style.display = 'block';
+
+    const chip = document.getElementById('loggedUserChip');
+    const nameSpan = document.getElementById('loggedUserName');
+    if (chip && nameSpan) {
+        nameSpan.textContent = username;
+        chip.style.display = 'block';
+    }
 }
 
 function lockParticipantName(name) {
