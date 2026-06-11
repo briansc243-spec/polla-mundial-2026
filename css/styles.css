@@ -500,7 +500,7 @@ input:focus, select:focus {
     background: var(--gradient-3);
     padding: 20px;
     display: grid;
-    grid-template-columns: 60px 1fr 100px 100px 150px;
+    grid-template-columns: 60px 1fr 100px 100px 110px 110px;
     gap: 20px;
     font-weight: 700;
     text-transform: uppercase;
@@ -510,7 +510,7 @@ input:focus, select:focus {
 
 .leaderboard-row {
     display: grid;
-    grid-template-columns: 60px 1fr 100px 100px 150px;
+    grid-template-columns: 60px 1fr 100px 100px 110px 110px;
     gap: 20px;
     padding: 20px;
     border-bottom: 1px solid var(--dark-3);
@@ -734,8 +734,10 @@ input:focus, select:focus {
 
     .leaderboard-header span:nth-child(4),
     .leaderboard-header span:nth-child(5),
+    .leaderboard-header span:nth-child(6),
     .leaderboard-row span:nth-child(4),
-    .leaderboard-row span:nth-child(5) {
+    .leaderboard-row span:nth-child(5),
+    .leaderboard-row span:nth-child(6) {
         display: none;
     }
 
@@ -1172,8 +1174,10 @@ input:focus, select:focus {
 
     .leaderboard-header span:nth-child(4),
     .leaderboard-header span:nth-child(5),
+    .leaderboard-header span:nth-child(6),
     .leaderboard-row span:nth-child(4),
-    .leaderboard-row span:nth-child(5) {
+    .leaderboard-row span:nth-child(5),
+    .leaderboard-row span:nth-child(6) {
         display: none;
     }
 

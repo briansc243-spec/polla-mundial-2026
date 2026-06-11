@@ -1128,15 +1128,20 @@ function updateLeaderboard() {
         return;
     }
 
-    container.innerHTML = leaderboard.map((p, index) => `
+    container.innerHTML = leaderboard.map((p, index) => {
+        const participant = participants.find(pt => pt.name === p.name);
+        const sp = participant?.specialPredictions || {};
+        const specialCount = [sp.champion, sp.runnerUp, sp.thirdPlace, sp.topScorer].filter(v => v && v.trim()).length;
+        return `
         <div class="leaderboard-row">
             <span class="rank rank-${index + 1}">${index + 1}</span>
             <span>${p.name}</span>
             <span class="points">${p.points}</span>
             <span>${p.exact}</span>
             <span>${p.tendency}</span>
-        </div>
-    `).join('');
+            <span style="color:#FFD700; font-weight:600;">${specialCount}/4</span>
+        </div>`;
+    }).join('');
 }
 
 // Actualizar estadísticas
