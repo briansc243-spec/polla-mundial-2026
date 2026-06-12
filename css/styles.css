@@ -1208,4 +1208,78 @@ input:focus, select:focus {
     margin-bottom: 20px;
     opacity: 0.3;
 }
+
+/* ── Match card team row ── */
+.match-teams-row {
+    display: grid;
+    grid-template-columns: 1fr 52px 52px 1fr;
+    align-items: center;
+    gap: 10px;
+}
+
+.team-name-left  { text-align: left; }
+.team-name-right { text-align: right; }
+
+/* ── Score input: remove number spinners, ensure visibility ── */
+.score-input {
+    -moz-appearance: textfield;
+    min-width: 44px;
+    width: 100%;
+}
+.score-input::-webkit-outer-spin-button,
+.score-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ── Mobile: ≤ 600px ── */
+@media (max-width: 600px) {
+
+    /* Match card */
+    .match-teams-row {
+        grid-template-columns: 1fr 44px 44px 1fr;
+        gap: 6px;
+    }
+    .team-name {
+        font-size: 0.82rem;
+        word-break: break-word;
+    }
+    .score-input {
+        padding: 8px 2px;
+        font-size: 1.1rem;
+        min-width: 40px;
+    }
+
+    /* Groups table: hide GC, DG, RESULTADOS columns */
+    .group-standings-table th:nth-child(7),
+    .group-standings-table td:nth-child(7),
+    .group-standings-table th:nth-child(8),
+    .group-standings-table td:nth-child(8),
+    .group-standings-table th:nth-child(10),
+    .group-standings-table td:nth-child(10) {
+        display: none;
+    }
+    .group-standings-table th:first-child,
+    .group-standings-table td:first-child {
+        min-width: 130px;
+        padding-left: 10px;
+    }
+    .group-standings-table th,
+    .group-standings-table td {
+        padding: 10px 5px;
+        font-size: 0.8rem;
+    }
+    .pts-cell { font-size: 1.1rem; }
+    .team-flag { font-size: 1rem; margin-right: 6px; }
+    .team-position { width: 18px; height: 18px; line-height: 18px; margin-right: 6px; font-size: 0.7rem; }
+
+    /* Leaderboard: prevent long names overflow */
+    .leaderboard-row span:nth-child(2),
+    .leaderboard-header span:nth-child(2) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+    }
+}
     </style>
