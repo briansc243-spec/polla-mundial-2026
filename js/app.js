@@ -1188,9 +1188,8 @@ async function submitPredictions() {
 
 // Guardar resultados reales
 async function saveResults() {
-    // Re-leer DB para no perder resultados guardados manualmente
-    const freshResults = await storage.get('results');
-    if (freshResults) results = freshResults;
+    // Siempre re-leer DB para no perder resultados guardados manualmente
+    const freshResults = await storage.get('results') || [];
 
     const inputResults = matches.map(match => {
         const score1Input = document.getElementById(`result1-${match.id}`);
@@ -1202,9 +1201,15 @@ async function saveResults() {
 
     // Merge: base = DB fresco, override = inputs con valores
     const mergedMap = {};
-    results.forEach(r => { mergedMap[r.matchId] = r; });
+    freshResults.forEach(r => { mergedMap[r.matchId] = r; });
     inputResults.forEach(r => { mergedMap[r.matchId] = r; });
     results = Object.values(mergedMap);
+
+    // Guardia: nunca guardar menos resultados de los que ya hay en DB
+    if (results.length < freshResults.length) {
+        alert(`⚠️ Error: se intentó guardar ${results.length} resultado(s) pero la DB tiene ${freshResults.length}. Recarga la página e intenta de nuevo.`);
+        return;
+    }
 
     await storage.set('results', results);
     logAction(sessionStorage.getItem('pollaUser'), 'save_results', {
