@@ -1268,7 +1268,57 @@ function renderAllPicks() {
         return;
     }
 
-    container.innerHTML = eligible.map(match => {
+    // Bloque de especiales: se muestra solo cuando ya cerró el plazo
+    let specialsHtml = '';
+    if (now >= SPECIAL_DEADLINE) {
+        const specialRows = participants.map(p => {
+            const sp = p.specialPredictions || {};
+            const fields = [
+                { label: '🥇 Campeón',     value: sp.champion   },
+                { label: '🥈 Subcampeón',  value: sp.runnerUp   },
+                { label: '🥉 Tercer puesto', value: sp.thirdPlace },
+                { label: '⚽ Goleador',    value: sp.topScorer  },
+            ];
+            const cells = fields.map(f =>
+                `<td style="padding:8px 10px;text-align:center;font-size:0.85rem;">${f.value && f.value.trim() ? f.value : '<span style="color:var(--text-dim);">—</span>'}</td>`
+            ).join('');
+            return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:8px 14px;">${p.name}</td>
+                ${cells}
+            </tr>`;
+        }).join('');
+
+        specialsHtml = `
+        <details style="margin-bottom:10px;border:1px solid rgba(255,215,0,0.3);border-radius:12px;overflow:hidden;">
+            <summary style="padding:13px 18px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;background:rgba(255,215,0,0.05);user-select:none;">
+                <span style="font-size:0.95rem;font-weight:600;color:#FFD700;">⭐ Predicciones Especiales</span>
+                <span style="margin-left:auto;color:var(--text-dim);font-size:0.8rem;">Plazo cerrado</span>
+            </summary>
+            <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;min-width:420px;">
+                <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font-size:0.82rem;">
+                    <th style="padding:8px 14px;text-align:left;font-weight:500;">Participante</th>
+                    <th style="padding:8px 10px;text-align:center;font-weight:500;">🥇 Campeón</th>
+                    <th style="padding:8px 10px;text-align:center;font-weight:500;">🥈 Subcampeón</th>
+                    <th style="padding:8px 10px;text-align:center;font-weight:500;">🥉 3er puesto</th>
+                    <th style="padding:8px 10px;text-align:center;font-weight:500;">⚽ Goleador</th>
+                </tr></thead>
+                <tbody>${specialRows}</tbody>
+            </table>
+            </div>
+        </details>`;
+    } else {
+        const msLeft = SPECIAL_DEADLINE - now;
+        const daysLeft  = Math.floor(msLeft / 86400000);
+        const hoursLeft = Math.floor((msLeft % 86400000) / 3600000);
+        specialsHtml = `
+        <div style="border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:14px 18px;background:rgba(255,215,0,0.04);color:var(--text-dim);font-size:0.88rem;margin-bottom:10px;">
+            ⭐ <strong style="color:#FFD700;">Predicciones Especiales</strong> — se revelan cuando cierre el plazo
+            <span style="margin-left:8px;">⏳ ${daysLeft}d ${hoursLeft}h restantes</span>
+        </div>`;
+    }
+
+    container.innerHTML = specialsHtml + eligible.map(match => {
         const result = results.find(r => r.matchId === match.id);
 
         const rows = participants.map(p => {
