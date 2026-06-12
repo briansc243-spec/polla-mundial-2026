@@ -976,11 +976,13 @@ function renderMyPredictions() {
                    </div>`;
 
             html += `
-                <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:10px 14px; margin-bottom:6px; gap:8px;">
-                    <span style="flex:1; font-size:0.88rem; color:#e0e0e0;">${match.team1}</span>
-                    ${scoreBlock}
-                    <span style="flex:1; text-align:right; font-size:0.88rem; color:#e0e0e0;">${match.team2}</span>
-                    <span style="min-width:70px; text-align:right;">${pointsBadge}</span>
+                <div class="pick-card">
+                    <div class="pick-card-teams">
+                        <span class="pick-team pick-team-left">${match.team1}</span>
+                        ${scoreBlock}
+                        <span class="pick-team pick-team-right">${match.team2}</span>
+                    </div>
+                    ${pointsBadge ? `<div class="pick-card-points">${pointsBadge}</div>` : ''}
                 </div>`;
         });
     });
