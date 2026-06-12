@@ -899,6 +899,87 @@ async function saveSpecialPredictions() {
     showToast('✅ Predicciones especiales guardadas');
 }
 
+function renderGroups() {
+    const container = document.getElementById('groupsContainer');
+    if (!container) return;
+
+    const groupLetters = [...new Set(matches.filter(m => m.group && m.group.length === 1).map(m => m.group))].sort();
+    let html = '';
+
+    for (const groupLetter of groupLetters) {
+        const groupMatches = matches.filter(m => m.group === groupLetter);
+        const teamSet = new Set();
+        groupMatches.forEach(m => { teamSet.add(m.team1); teamSet.add(m.team2); });
+
+        const stats = {};
+        for (const team of teamSet) {
+            stats[team] = { team, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, form: [] };
+        }
+
+        const sortedMatches = [...groupMatches].sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+        for (const match of sortedMatches) {
+            const result = results.find(r => r.matchId === match.id);
+            if (!result) continue;
+            const s1 = result.score1, s2 = result.score2;
+            const t1 = match.team1, t2 = match.team2;
+            stats[t1].pj++; stats[t2].pj++;
+            stats[t1].gf += s1; stats[t1].gc += s2;
+            stats[t2].gf += s2; stats[t2].gc += s1;
+            if (s1 > s2) {
+                stats[t1].g++; stats[t2].p++;
+                stats[t1].form.push('G'); stats[t2].form.push('P');
+            } else if (s1 < s2) {
+                stats[t2].g++; stats[t1].p++;
+                stats[t1].form.push('P'); stats[t2].form.push('G');
+            } else {
+                stats[t1].e++; stats[t2].e++;
+                stats[t1].form.push('E'); stats[t2].form.push('E');
+            }
+        }
+
+        const teams = Object.values(stats).map(s => ({
+            ...s, pts: s.g * 3 + s.e, dg: s.gf - s.gc
+        })).sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);
+
+        let rows = '';
+        teams.forEach((t, idx) => {
+            const dgStr = t.dg > 0 ? `+${t.dg}` : `${t.dg}`;
+            const formCells = t.form.map(f => {
+                if (f === 'G') return `<span style="background:#00FF88;color:#000;border-radius:4px;padding:1px 6px;font-weight:700;font-size:0.8rem;">G</span>`;
+                if (f === 'E') return `<span style="background:#FFD700;color:#000;border-radius:4px;padding:1px 6px;font-weight:700;font-size:0.8rem;">E</span>`;
+                return `<span style="background:#FF4444;color:#fff;border-radius:4px;padding:1px 6px;font-weight:700;font-size:0.8rem;">P</span>`;
+            });
+            while (formCells.length < 3) formCells.push('-');
+            const name = stripFlag(t.team);
+            const flag = t.team.replace(name, '').trim();
+            rows += `<tr>
+                <td><div class="team-name-cell">
+                    <span class="team-position">${idx + 1}</span>
+                    <span class="team-flag">${flag}</span>
+                    <span>${name}</span>
+                </div></td>
+                <td>${t.pj}</td><td>${t.g}</td><td>${t.e}</td><td>${t.p}</td>
+                <td>${t.gf}</td><td>${t.gc}</td><td>${dgStr}</td>
+                <td class="pts-cell">${t.pts}</td>
+                <td class="results-cell">${formCells.join(' ')}</td>
+            </tr>`;
+        });
+
+        html += `<div class="group-table-container">
+            <div class="group-table-header">Grupo ${groupLetter}</div>
+            <table class="group-standings-table">
+                <thead><tr>
+                    <th></th><th>PJ</th><th>G</th><th>E</th><th>P</th>
+                    <th>GF</th><th>GC</th><th>DG</th><th>Pts</th><th>RESULTADOS</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+    }
+
+    container.innerHTML = html;
+}
+
 // Evitar llamadas concurrentes a init()
 let _initLock = false;
 
@@ -954,6 +1035,7 @@ async function init() {
     renderMatches();
     renderMyPredictions();
     renderResults();
+    renderGroups();
     updateLeaderboard();
     updateStats();
     initSpecialPredictions();
