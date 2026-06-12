@@ -226,6 +226,12 @@ header {
     border: 1px solid rgba(255,255,255,0.1);
     box-shadow: 0 4px 24px rgba(0,0,0,0.5);
     text-decoration: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.brand-logo.logo-hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
 }
 
 .brand-logo .logo-icon {

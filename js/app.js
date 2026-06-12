@@ -268,6 +268,21 @@ async function showMainApp() {
     document.getElementById('logoutBtn').style.display = 'block';
     startLivePolling();
 
+    // Ocultar logo al hacer scroll, mostrar al volver arriba
+    const brandLogo = document.querySelector('.brand-logo');
+    if (brandLogo) {
+        let lastScrollY = 0;
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY > 60 && currentScrollY > lastScrollY) {
+                brandLogo.classList.add('logo-hidden');
+            } else if (currentScrollY < 30) {
+                brandLogo.classList.remove('logo-hidden');
+            }
+            lastScrollY = currentScrollY;
+        }, { passive: true });
+    }
+
     const username = sessionStorage.getItem('pollaUser');
 
     // Intentar cache local → polla_users.display_name → polla_data (fallback)
