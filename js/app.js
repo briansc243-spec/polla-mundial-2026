@@ -356,30 +356,48 @@ function showToast(msg, duration = 3000) {
 
 function applyRoleUI(username) {
     const isAdmin = sessionStorage.getItem('pollaRole') === 'admin' || username === 'admin';
+    const isMobile = window.innerWidth <= 600;
 
     const resultsTab = document.getElementById('resultsTab');
     if (resultsTab) resultsTab.style.display = isAdmin ? 'flex' : 'none';
 
-    // Mostrar barra de botones de cabecera
     const headerBtns = document.getElementById('headerBtns');
     if (headerBtns) headerBtns.style.display = 'flex';
 
-    const changePwdBtn = document.getElementById('changePwdBtn');
-    if (changePwdBtn) changePwdBtn.style.display = 'block';
-
-    const adminUsersBtn = document.getElementById('adminUsersBtn');
-    if (adminUsersBtn) adminUsersBtn.style.display = isAdmin ? 'block' : 'none';
-
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) logoutBtn.style.display = 'block';
-
-    const chip = document.getElementById('loggedUserChip');
-    const nameSpan = document.getElementById('loggedUserName');
-    if (chip && nameSpan) {
-        nameSpan.textContent = username;
-        chip.style.display = 'block';
+    if (isMobile) {
+        // Mobile: mostrar solo el botón ⋮
+        document.getElementById('loggedUserChip').style.display  = 'none';
+        document.getElementById('changePwdBtn').style.display    = 'none';
+        document.getElementById('adminUsersBtn').style.display   = 'none';
+        document.getElementById('logoutBtn').style.display       = 'none';
+        document.getElementById('mobileMenu').style.display      = 'block';
+        document.getElementById('mobileLoggedUserName').textContent = username;
+        const mobileAdminBtn = document.getElementById('mobileAdminBtn');
+        if (mobileAdminBtn) mobileAdminBtn.style.display = isAdmin ? 'block' : 'none';
+    } else {
+        // Desktop: botones individuales
+        document.getElementById('mobileMenu').style.display      = 'none';
+        document.getElementById('changePwdBtn').style.display    = 'block';
+        document.getElementById('logoutBtn').style.display       = 'block';
+        document.getElementById('adminUsersBtn').style.display   = isAdmin ? 'block' : 'none';
+        const chip = document.getElementById('loggedUserChip');
+        const nameSpan = document.getElementById('loggedUserName');
+        if (chip && nameSpan) { nameSpan.textContent = username; chip.style.display = 'block'; }
     }
 }
+
+function toggleMobileMenu() {
+    const dd = document.getElementById('mobileMenuDropdown');
+    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+}
+
+document.addEventListener('click', e => {
+    const menu = document.getElementById('mobileMenu');
+    if (menu && !menu.contains(e.target)) {
+        const dd = document.getElementById('mobileMenuDropdown');
+        if (dd) dd.style.display = 'none';
+    }
+});
 
 function lockParticipantName(name) {
     const input = document.getElementById('participantName');
