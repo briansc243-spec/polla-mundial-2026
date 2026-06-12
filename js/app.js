@@ -1018,8 +1018,9 @@ function renderMatches() {
                     const timeInfo = !locked ? getTimeUntilLock(match) : null;
                     const lockedClass = locked ? 'match-locked' : '';
                     const disabledAttr = locked ? 'disabled' : '';
+                    const savedResult = results.find(r => r.matchId === match.id);
                     const msLeft = new Date(match.dateTime) - new Date();
-                    const closingSoon = !locked && msLeft > 0 && msLeft < 12 * 60 * 60 * 1000;
+                    const closingSoon = !locked && !savedResult && msLeft > 0 && msLeft < 12 * 60 * 60 * 1000;
 
                     const val1 = savedPred ? savedPred.score1 : '';
                     const val2 = savedPred ? savedPred.score2 : '';
@@ -1035,7 +1036,6 @@ function renderMatches() {
                     // Live score badge
                     const liveKey = `${stripFlag(match.team1)}|${stripFlag(match.team2)}`;
                     const live = liveScores[liveKey];
-                    const savedResult = results.find(r => r.matchId === match.id);
                     const matchStart = new Date(match.dateTime);
                     const now = new Date();
                     const minsSinceStart = (now - matchStart) / 60000;
