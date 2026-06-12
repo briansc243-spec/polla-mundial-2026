@@ -1020,7 +1020,7 @@ function renderMatches() {
                     const disabledAttr = locked ? 'disabled' : '';
                     const savedResult = results.find(r => r.matchId === match.id);
                     const msLeft = new Date(match.dateTime) - new Date();
-                    const closingSoon = !locked && !savedResult && msLeft > 0 && msLeft < 12 * 60 * 60 * 1000;
+                    const closingSoon = !locked && !savedResult && msLeft > 0 && msLeft < 16 * 60 * 60 * 1000;
 
                     const val1 = savedPred ? savedPred.score1 : '';
                     const val2 = savedPred ? savedPred.score2 : '';
