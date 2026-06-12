@@ -498,15 +498,15 @@ const storage = {
 
                         // Partidos del Mundial 2026 - Fase de Grupos (dateTime en hora PE, UTC-5)
 const defaultMatches = [
-    // GRUPO A
-    { id: 1, group: 'A', team1: '🇲🇽 México', team2: '🇿🇦 Sudáfrica', dateTime: '2026-06-11T14:00:00-05:00', venue: 'Estadio Ciudad de México' },
+    // GRUPO A — México, Sudáfrica, Corea del Sur, Chequia
+    { id: 1, group: 'A', team1: '🇲🇽 México', team2: '🇿🇦 Sudáfrica', dateTime: '2026-06-11T14:00:00-05:00', venue: 'Estadio Banorte, Ciudad de México' },
     { id: 2, group: 'A', team1: '🇰🇷 Corea del Sur', team2: '🇨🇿 Chequia', dateTime: '2026-06-11T21:00:00-05:00', venue: 'Estadio Akron, Guadalajara' },
     { id: 3, group: 'A', team1: '🇲🇽 México', team2: '🇰🇷 Corea del Sur', dateTime: '2026-06-18T20:00:00-05:00', venue: 'Estadio Akron, Guadalajara' },
     { id: 4, group: 'A', team1: '🇨🇿 Chequia', team2: '🇿🇦 Sudáfrica', dateTime: '2026-06-18T11:00:00-05:00', venue: 'Mercedes-Benz Stadium, Atlanta' },
     { id: 5, group: 'A', team1: '🇿🇦 Sudáfrica', team2: '🇰🇷 Corea del Sur', dateTime: '2026-06-24T20:00:00-05:00', venue: 'Estadio BBVA, Guadalupe' },
-    { id: 6, group: 'A', team1: '🇨🇿 Chequia', team2: '🇲🇽 México', dateTime: '2026-06-24T20:00:00-05:00', venue: 'Estadio Ciudad de México' },
+    { id: 6, group: 'A', team1: '🇨🇿 Chequia', team2: '🇲🇽 México', dateTime: '2026-06-24T20:00:00-05:00', venue: 'Estadio Banorte, Ciudad de México' },
 
-    // GRUPO B
+    // GRUPO B — Canadá, Qatar, Suiza, Bosnia y Herzegovina
     { id: 7, group: 'B', team1: '🇶🇦 Qatar', team2: '🇨🇭 Suiza', dateTime: '2026-06-13T14:00:00-05:00', venue: 'Levi\'s Stadium, Santa Clara' },
     { id: 8, group: 'B', team1: '🇨🇦 Canadá', team2: '🇧🇦 Bosnia y Herzegovina', dateTime: '2026-06-12T14:00:00-05:00', venue: 'BMO Field, Toronto' },
     { id: 9, group: 'B', team1: '🇨🇭 Suiza', team2: '🇧🇦 Bosnia y Herzegovina', dateTime: '2026-06-18T14:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
@@ -514,23 +514,23 @@ const defaultMatches = [
     { id: 11, group: 'B', team1: '🇧🇦 Bosnia y Herzegovina', team2: '🇶🇦 Qatar', dateTime: '2026-06-24T14:00:00-05:00', venue: 'Lumen Field, Seattle' },
     { id: 12, group: 'B', team1: '🇨🇭 Suiza', team2: '🇨🇦 Canadá', dateTime: '2026-06-24T14:00:00-05:00', venue: 'BC Place, Vancouver' },
 
-    // GRUPO C
-    { id: 13, group: 'C', team1: '🇧🇷 Brasil', team2: '🇹🇷 Turquía', dateTime: '2026-06-13T17:00:00-05:00', venue: 'MetLife Stadium, East Rutherford' },
-    { id: 14, group: 'C', team1: '🇲🇦 Marruecos', team2: '🇨🇴 Colombia', dateTime: '2026-06-13T20:00:00-05:00', venue: 'Gillette Stadium, Foxborough' },
-    { id: 15, group: 'C', team1: '🇧🇷 Brasil', team2: '🇲🇦 Marruecos', dateTime: '2026-06-19T19:30:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' },
-    { id: 16, group: 'C', team1: '🇨🇴 Colombia', team2: '🇹🇷 Turquía', dateTime: '2026-06-19T17:00:00-05:00', venue: 'AT&T Stadium, Arlington' },
-    { id: 17, group: 'C', team1: '🇹🇷 Turquía', team2: '🇧🇷 Brasil', dateTime: '2026-06-24T17:00:00-05:00', venue: 'Hard Rock Stadium, Miami' },
-    { id: 18, group: 'C', team1: '🇨🇴 Colombia', team2: '🇲🇦 Marruecos', dateTime: '2026-06-24T17:00:00-05:00', venue: 'Mercedes-Benz Stadium, Atlanta' },
+    // GRUPO C — Brasil, Marruecos, Haití, Escocia
+    { id: 13, group: 'C', team1: '🇧🇷 Brasil', team2: '🇲🇦 Marruecos', dateTime: '2026-06-13T17:00:00-05:00', venue: 'MetLife Stadium, East Rutherford' },
+    { id: 14, group: 'C', team1: '🇭🇹 Haití', team2: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escocia', dateTime: '2026-06-13T20:00:00-05:00', venue: 'Gillette Stadium, Foxborough' },
+    { id: 15, group: 'C', team1: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escocia', team2: '🇲🇦 Marruecos', dateTime: '2026-06-19T17:00:00-05:00', venue: 'Gillette Stadium, Foxborough' },
+    { id: 16, group: 'C', team1: '🇧🇷 Brasil', team2: '🇭🇹 Haití', dateTime: '2026-06-19T19:30:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' },
+    { id: 17, group: 'C', team1: '🇲🇦 Marruecos', team2: '🇭🇹 Haití', dateTime: '2026-06-24T17:00:00-05:00', venue: 'Mercedes-Benz Stadium, Atlanta' },
+    { id: 18, group: 'C', team1: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escocia', team2: '🇧🇷 Brasil', dateTime: '2026-06-24T17:00:00-05:00', venue: 'Hard Rock Stadium, Miami Gardens' },
 
-    // GRUPO D
+    // GRUPO D — USA, Paraguay, Australia, Turquía
     { id: 19, group: 'D', team1: '🇺🇸 USA', team2: '🇵🇾 Paraguay', dateTime: '2026-06-12T20:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
-    { id: 20, group: 'D', team1: '🇦🇺 Australia', team2: '🇸🇪 Suecia', dateTime: '2026-06-13T23:00:00-05:00', venue: 'BC Place, Vancouver' },
+    { id: 20, group: 'D', team1: '🇦🇺 Australia', team2: '🇹🇷 Turquía', dateTime: '2026-06-13T23:00:00-05:00', venue: 'BC Place, Vancouver' },
     { id: 21, group: 'D', team1: '🇺🇸 USA', team2: '🇦🇺 Australia', dateTime: '2026-06-19T14:00:00-05:00', venue: 'Lumen Field, Seattle' },
-    { id: 22, group: 'D', team1: '🇸🇪 Suecia', team2: '🇵🇾 Paraguay', dateTime: '2026-06-19T22:00:00-05:00', venue: 'Levi\'s Stadium, Santa Clara' },
+    { id: 22, group: 'D', team1: '🇹🇷 Turquía', team2: '🇵🇾 Paraguay', dateTime: '2026-06-19T22:00:00-05:00', venue: 'Levi\'s Stadium, Santa Clara' },
     { id: 23, group: 'D', team1: '🇵🇾 Paraguay', team2: '🇦🇺 Australia', dateTime: '2026-06-25T21:00:00-05:00', venue: 'Levi\'s Stadium, Santa Clara' },
-    { id: 24, group: 'D', team1: '🇸🇪 Suecia', team2: '🇺🇸 USA', dateTime: '2026-06-25T21:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
+    { id: 24, group: 'D', team1: '🇹🇷 Turquía', team2: '🇺🇸 USA', dateTime: '2026-06-25T21:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
 
-    // GRUPO E
+    // GRUPO E — Alemania, Curazao, Costa de Marfil, Ecuador
     { id: 25, group: 'E', team1: '🇩🇪 Alemania', team2: '🇨🇼 Curazao', dateTime: '2026-06-14T12:00:00-05:00', venue: 'NRG Stadium, Houston' },
     { id: 26, group: 'E', team1: '🇨🇮 Costa de Marfil', team2: '🇪🇨 Ecuador', dateTime: '2026-06-14T18:00:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' },
     { id: 27, group: 'E', team1: '🇪🇨 Ecuador', team2: '🇨🇼 Curazao', dateTime: '2026-06-20T19:00:00-05:00', venue: 'GEHA Field, Kansas City' },
@@ -538,61 +538,61 @@ const defaultMatches = [
     { id: 29, group: 'E', team1: '🇨🇼 Curazao', team2: '🇨🇮 Costa de Marfil', dateTime: '2026-06-25T15:00:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' },
     { id: 30, group: 'E', team1: '🇪🇨 Ecuador', team2: '🇩🇪 Alemania', dateTime: '2026-06-25T15:00:00-05:00', venue: 'MetLife Stadium, East Rutherford' },
 
-    // GRUPO F
+    // GRUPO F — Países Bajos, Japón, Suecia, Túnez
     { id: 31, group: 'F', team1: '🇳🇱 Países Bajos', team2: '🇯🇵 Japón', dateTime: '2026-06-14T15:00:00-05:00', venue: 'AT&T Stadium, Arlington' },
-    { id: 32, group: 'F', team1: '🇳🇿 Nueva Zelanda', team2: '🇹🇳 Túnez', dateTime: '2026-06-14T21:00:00-05:00', venue: 'Estadio BBVA, Guadalupe' },
+    { id: 32, group: 'F', team1: '🇸🇪 Suecia', team2: '🇹🇳 Túnez', dateTime: '2026-06-14T21:00:00-05:00', venue: 'Estadio BBVA, Guadalupe' },
     { id: 33, group: 'F', team1: '🇹🇳 Túnez', team2: '🇯🇵 Japón', dateTime: '2026-06-20T23:00:00-05:00', venue: 'Estadio BBVA, Guadalupe' },
-    { id: 34, group: 'F', team1: '🇳🇱 Países Bajos', team2: '🇳🇿 Nueva Zelanda', dateTime: '2026-06-20T12:00:00-05:00', venue: 'NRG Stadium, Houston' },
+    { id: 34, group: 'F', team1: '🇳🇱 Países Bajos', team2: '🇸🇪 Suecia', dateTime: '2026-06-20T12:00:00-05:00', venue: 'NRG Stadium, Houston' },
     { id: 35, group: 'F', team1: '🇹🇳 Túnez', team2: '🇳🇱 Países Bajos', dateTime: '2026-06-25T18:00:00-05:00', venue: 'GEHA Field, Kansas City' },
-    { id: 36, group: 'F', team1: '🇯🇵 Japón', team2: '🇳🇿 Nueva Zelanda', dateTime: '2026-06-25T18:00:00-05:00', venue: 'AT&T Stadium, Arlington' },
+    { id: 36, group: 'F', team1: '🇯🇵 Japón', team2: '🇸🇪 Suecia', dateTime: '2026-06-25T18:00:00-05:00', venue: 'AT&T Stadium, Arlington' },
 
-    // GRUPO G
+    // GRUPO G — Bélgica, Egipto, Irán, Nueva Zelanda
     { id: 37, group: 'G', team1: '🇧🇪 Bélgica', team2: '🇪🇬 Egipto', dateTime: '2026-06-15T14:00:00-05:00', venue: 'Lumen Field, Seattle' },
-    { id: 38, group: 'G', team1: '🇮🇷 Irán', team2: '🇸🇦 Arabia Saudita', dateTime: '2026-06-15T17:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
+    { id: 38, group: 'G', team1: '🇮🇷 Irán', team2: '🇳🇿 Nueva Zelanda', dateTime: '2026-06-15T20:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
     { id: 39, group: 'G', team1: '🇧🇪 Bélgica', team2: '🇮🇷 Irán', dateTime: '2026-06-21T14:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
-    { id: 40, group: 'G', team1: '🇸🇦 Arabia Saudita', team2: '🇪🇬 Egipto', dateTime: '2026-06-21T20:00:00-05:00', venue: 'BC Place, Vancouver' },
-    { id: 41, group: 'G', team1: '🇮🇷 Irán', team2: '🇪🇬 Egipto', dateTime: '2026-06-26T22:00:00-05:00', venue: 'Lumen Field, Seattle' },
-    { id: 42, group: 'G', team1: '🇸🇦 Arabia Saudita', team2: '🇧🇪 Bélgica', dateTime: '2026-06-26T22:00:00-05:00', venue: 'BC Place, Vancouver' },
+    { id: 40, group: 'G', team1: '🇳🇿 Nueva Zelanda', team2: '🇪🇬 Egipto', dateTime: '2026-06-22T20:00:00-05:00', venue: 'BC Place, Vancouver' },
+    { id: 41, group: 'G', team1: '🇪🇬 Egipto', team2: '🇮🇷 Irán', dateTime: '2026-06-26T22:00:00-05:00', venue: 'Lumen Field, Seattle' },
+    { id: 42, group: 'G', team1: '🇳🇿 Nueva Zelanda', team2: '🇧🇪 Bélgica', dateTime: '2026-06-26T22:00:00-05:00', venue: 'BC Place, Vancouver' },
 
-    // GRUPO H
+    // GRUPO H — España, Cabo Verde, Arabia Saudita, Uruguay
     { id: 43, group: 'H', team1: '🇪🇸 España', team2: '🇨🇻 Cabo Verde', dateTime: '2026-06-15T11:00:00-05:00', venue: 'Mercedes-Benz Stadium, Atlanta' },
-    { id: 44, group: 'H', team1: '🇺🇾 Uruguay', team2: '🇭🇹 Haití', dateTime: '2026-06-15T17:00:00-05:00', venue: 'Hard Rock Stadium, Miami' },
-    { id: 45, group: 'H', team1: '🇪🇸 España', team2: '🇺🇾 Uruguay', dateTime: '2026-06-21T11:00:00-05:00', venue: 'Mercedes-Benz Stadium, Atlanta' },
-    { id: 46, group: 'H', team1: '🇭🇹 Haití', team2: '🇨🇻 Cabo Verde', dateTime: '2026-06-21T17:00:00-05:00', venue: 'Hard Rock Stadium, Miami' },
+    { id: 44, group: 'H', team1: '🇸🇦 Arabia Saudita', team2: '🇺🇾 Uruguay', dateTime: '2026-06-15T17:00:00-05:00', venue: 'Hard Rock Stadium, Miami Gardens' },
+    { id: 45, group: 'H', team1: '🇪🇸 España', team2: '🇸🇦 Arabia Saudita', dateTime: '2026-06-21T11:00:00-05:00', venue: 'Mercedes-Benz Stadium, Atlanta' },
+    { id: 46, group: 'H', team1: '🇺🇾 Uruguay', team2: '🇨🇻 Cabo Verde', dateTime: '2026-06-21T17:00:00-05:00', venue: 'Hard Rock Stadium, Miami Gardens' },
     { id: 47, group: 'H', team1: '🇺🇾 Uruguay', team2: '🇪🇸 España', dateTime: '2026-06-26T19:00:00-05:00', venue: 'Estadio Akron, Guadalajara' },
-    { id: 48, group: 'H', team1: '🇨🇻 Cabo Verde', team2: '🇭🇹 Haití', dateTime: '2026-06-26T19:00:00-05:00', venue: 'NRG Stadium, Houston' },
+    { id: 48, group: 'H', team1: '🇨🇻 Cabo Verde', team2: '🇸🇦 Arabia Saudita', dateTime: '2026-06-26T19:00:00-05:00', venue: 'NRG Stadium, Houston' },
 
-    // GRUPO I
-    { id: 49, group: 'I', team1: '🇫🇷 Francia', team2: '🇮🇶 Iraq', dateTime: '2026-06-15T20:00:00-05:00', venue: 'AT&T Stadium, Arlington' },
-    { id: 50, group: 'I', team1: '🇸🇳 Senegal', team2: '🇳🇴 Noruega', dateTime: '2026-06-16T17:00:00-05:00', venue: 'Levi\'s Stadium, Santa Clara' },
-    { id: 51, group: 'I', team1: '🇫🇷 Francia', team2: '🇸🇳 Senegal', dateTime: '2026-06-22T16:00:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' },
-    { id: 52, group: 'I', team1: '🇳🇴 Noruega', team2: '🇮🇶 Iraq', dateTime: '2026-06-22T19:00:00-05:00', venue: 'MetLife Stadium, East Rutherford' },
-    { id: 53, group: 'I', team1: '🇮🇶 Iraq', team2: '🇳🇴 Noruega', dateTime: '2026-06-26T14:00:00-05:00', venue: 'Gillette Stadium, Foxborough' },
-    { id: 54, group: 'I', team1: '🇸🇳 Senegal', team2: '🇫🇷 Francia', dateTime: '2026-06-26T14:00:00-05:00', venue: 'BMO Field, Toronto' },
+    // GRUPO I — Francia, Senegal, Iraq, Noruega
+    { id: 49, group: 'I', team1: '🇫🇷 Francia', team2: '🇸🇳 Senegal', dateTime: '2026-06-16T14:00:00-05:00', venue: 'MetLife Stadium, East Rutherford' },
+    { id: 50, group: 'I', team1: '🇮🇶 Iraq', team2: '🇳🇴 Noruega', dateTime: '2026-06-16T17:00:00-05:00', venue: 'Gillette Stadium, Foxborough' },
+    { id: 51, group: 'I', team1: '🇫🇷 Francia', team2: '🇮🇶 Iraq', dateTime: '2026-06-22T16:00:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' },
+    { id: 52, group: 'I', team1: '🇳🇴 Noruega', team2: '🇸🇳 Senegal', dateTime: '2026-06-22T19:00:00-05:00', venue: 'MetLife Stadium, East Rutherford' },
+    { id: 53, group: 'I', team1: '🇳🇴 Noruega', team2: '🇫🇷 Francia', dateTime: '2026-06-26T14:00:00-05:00', venue: 'Gillette Stadium, Foxborough' },
+    { id: 54, group: 'I', team1: '🇸🇳 Senegal', team2: '🇮🇶 Iraq', dateTime: '2026-06-26T14:00:00-05:00', venue: 'BMO Field, Toronto' },
 
-    // GRUPO J
+    // GRUPO J — Argentina, Algeria, Austria, Jordania
     { id: 55, group: 'J', team1: '🇦🇷 Argentina', team2: '🇩🇿 Algeria', dateTime: '2026-06-16T20:00:00-05:00', venue: 'GEHA Field, Kansas City' },
     { id: 56, group: 'J', team1: '🇦🇹 Austria', team2: '🇯🇴 Jordania', dateTime: '2026-06-16T23:00:00-05:00', venue: 'Levi\'s Stadium, Santa Clara' },
     { id: 57, group: 'J', team1: '🇦🇷 Argentina', team2: '🇦🇹 Austria', dateTime: '2026-06-22T12:00:00-05:00', venue: 'AT&T Stadium, Arlington' },
     { id: 58, group: 'J', team1: '🇯🇴 Jordania', team2: '🇩🇿 Algeria', dateTime: '2026-06-22T22:00:00-05:00', venue: 'Levi\'s Stadium, Santa Clara' },
     { id: 59, group: 'J', team1: '🇯🇴 Jordania', team2: '🇦🇷 Argentina', dateTime: '2026-06-27T21:00:00-05:00', venue: 'AT&T Stadium, Arlington' },
     { id: 60, group: 'J', team1: '🇩🇿 Algeria', team2: '🇦🇹 Austria', dateTime: '2026-06-27T21:00:00-05:00', venue: 'GEHA Field, Kansas City' },
-    
-    // GRUPO K
-    { id: 61, group: 'K', team1: '🇺🇿 Uzbekistán', team2: '🇵🇦 Panamá', dateTime: '2026-06-17T18:00:00-05:00', venue: 'Estadio Ciudad de México' },
+
+    // GRUPO K — Portugal, Congo DR, Colombia, Uzbekistán
+    { id: 61, group: 'K', team1: '🇺🇿 Uzbekistán', team2: '🇨🇴 Colombia', dateTime: '2026-06-18T21:00:00-05:00', venue: 'Estadio Banorte, Ciudad de México' },
     { id: 62, group: 'K', team1: '🇵🇹 Portugal', team2: '🇨🇩 Congo DR', dateTime: '2026-06-17T12:00:00-05:00', venue: 'NRG Stadium, Houston' },
-    { id: 63, group: 'K', team1: '🇵🇦 Panamá', team2: '🇨🇩 Congo DR', dateTime: '2026-06-23T18:00:00-05:00', venue: 'BMO Field, Toronto' },
-    { id: 64, group: 'K', team1: '🇵🇹 Portugal', team2: '🇺🇿 Uzbekistán', dateTime: '2026-06-23T12:00:00-05:00', venue: 'Estadio Akron, Guadalajara' },
-    { id: 65, group: 'K', team1: '🇵🇦 Panamá', team2: '🇵🇹 Portugal', dateTime: '2026-06-27T18:30:00-05:00', venue: 'Hard Rock Stadium, Miami' },
+    { id: 63, group: 'K', team1: '🇨🇴 Colombia', team2: '🇨🇩 Congo DR', dateTime: '2026-06-23T21:00:00-05:00', venue: 'Estadio Akron, Guadalajara' },
+    { id: 64, group: 'K', team1: '🇵🇹 Portugal', team2: '🇺🇿 Uzbekistán', dateTime: '2026-06-23T12:00:00-05:00', venue: 'NRG Stadium, Houston' },
+    { id: 65, group: 'K', team1: '🇨🇴 Colombia', team2: '🇵🇹 Portugal', dateTime: '2026-06-27T18:30:00-05:00', venue: 'Hard Rock Stadium, Miami Gardens' },
     { id: 66, group: 'K', team1: '🇨🇩 Congo DR', team2: '🇺🇿 Uzbekistán', dateTime: '2026-06-27T18:30:00-05:00', venue: 'Mercedes-Benz Stadium, Atlanta' },
 
-    // GRUPO L
+    // GRUPO L — Inglaterra, Croacia, Ghana, Panamá
     { id: 67, group: 'L', team1: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra', team2: '🇭🇷 Croacia', dateTime: '2026-06-17T15:00:00-05:00', venue: 'AT&T Stadium, Arlington' },
-    { id: 68, group: 'L', team1: '🇬🇭 Ghana', team2: '🇨🇷 Costa Rica', dateTime: '2026-06-17T18:00:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' },
+    { id: 68, group: 'L', team1: '🇬🇭 Ghana', team2: '🇵🇦 Panamá', dateTime: '2026-06-17T18:00:00-05:00', venue: 'BMO Field, Toronto' },
     { id: 69, group: 'L', team1: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra', team2: '🇬🇭 Ghana', dateTime: '2026-06-23T15:00:00-05:00', venue: 'Gillette Stadium, Foxborough' },
-    { id: 70, group: 'L', team1: '🇨🇷 Costa Rica', team2: '🇭🇷 Croacia', dateTime: '2026-06-23T18:00:00-05:00', venue: 'BMO Field, Toronto' },
-    { id: 71, group: 'L', team1: '🇭🇷 Croacia', team2: '🇬🇭 Ghana', dateTime: '2026-06-27T16:00:00-05:00', venue: 'Hard Rock Stadium, Miami' },
-    { id: 72, group: 'L', team1: '🇨🇷 Costa Rica', team2: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra', dateTime: '2026-06-27T16:00:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' }
+    { id: 70, group: 'L', team1: '🇵🇦 Panamá', team2: '🇭🇷 Croacia', dateTime: '2026-06-23T18:00:00-05:00', venue: 'BMO Field, Toronto' },
+    { id: 71, group: 'L', team1: '🇭🇷 Croacia', team2: '🇬🇭 Ghana', dateTime: '2026-06-27T16:00:00-05:00', venue: 'Lincoln Financial Field, Philadelphia' },
+    { id: 72, group: 'L', team1: '🇵🇦 Panamá', team2: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra', dateTime: '2026-06-27T16:00:00-05:00', venue: 'MetLife Stadium, East Rutherford' },
 ];
 
 let matches = [];
@@ -628,7 +628,7 @@ async function fetchLiveScores() {
         'Uzbekistan': 'Uzbekistán', 'Panama': 'Panamá',
         'Portugal': 'Portugal', 'Congo DR': 'Congo DR',
         'England': 'Inglaterra', 'Croatia': 'Croacia',
-        'Ghana': 'Ghana', 'Costa Rica': 'Costa Rica',
+        'Ghana': 'Ghana', 'Panama': 'Panamá',
         'Morocco': 'Marruecos', 'Colombia': 'Colombia',
         'Brazil': 'Brasil', 'Türkiye': 'Turquía',
         'Scotland': 'Escocia',
