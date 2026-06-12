@@ -606,68 +606,101 @@ function stripFlag(name) {
 }
 
 async function fetchLiveScores() {
+    const ESPN_TO_ES = {
+        'Mexico': 'México', 'South Africa': 'Sudáfrica',
+        'South Korea': 'Corea del Sur', 'Czechia': 'Chequia',
+        'Canada': 'Canadá', 'Bosnia-Herzegovina': 'Bosnia y Herzegovina',
+        'Switzerland': 'Suiza', 'Qatar': 'Qatar',
+        'United States': 'USA', 'Paraguay': 'Paraguay',
+        'Australia': 'Australia', 'Sweden': 'Suecia',
+        'Germany': 'Alemania', 'Curaçao': 'Curazao',
+        'Ivory Coast': 'Costa de Marfil', 'Ecuador': 'Ecuador',
+        'Netherlands': 'Países Bajos', 'Japan': 'Japón',
+        'New Zealand': 'Nueva Zelanda', 'Tunisia': 'Túnez',
+        'Belgium': 'Bélgica', 'Egypt': 'Egipto',
+        'Iran': 'Irán', 'Saudi Arabia': 'Arabia Saudita',
+        'Spain': 'España', 'Cape Verde': 'Cabo Verde',
+        'Uruguay': 'Uruguay', 'Haiti': 'Haití',
+        'France': 'Francia', 'Iraq': 'Iraq',
+        'Senegal': 'Senegal', 'Norway': 'Noruega',
+        'Argentina': 'Argentina', 'Algeria': 'Algeria',
+        'Austria': 'Austria', 'Jordan': 'Jordania',
+        'Uzbekistan': 'Uzbekistán', 'Panama': 'Panamá',
+        'Portugal': 'Portugal', 'Congo DR': 'Congo DR',
+        'England': 'Inglaterra', 'Croatia': 'Croacia',
+        'Ghana': 'Ghana', 'Costa Rica': 'Costa Rica',
+        'Morocco': 'Marruecos', 'Colombia': 'Colombia',
+        'Brazil': 'Brasil', 'Türkiye': 'Turquía',
+        'Scotland': 'Escocia',
+    };
+
     try {
-        // Cargar último estado conocido de polla_live como base
-        const { data: liveRows } = await db().from('polla_live').select('*');
-        if (liveRows) {
-            liveRows.forEach(row => {
-                const key = `${row.home_team}|${row.away_team}`;
-                if (!liveScores[key]) {
-                    liveScores[key] = {
-                        home_team: row.home_team, away_team: row.away_team,
-                        home_score: row.home_score, away_score: row.away_score,
-                        status: row.status, minute: row.minute
-                    };
-                }
-            });
-        }
+        const res = await fetch(
+            'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719'
+        );
+        if (!res.ok) { renderMatches(); return; }
+        const data = await res.json();
+        const events = data.events || [];
 
-        const { data, error } = await db().functions.invoke('live-scores');
-        if (error || !data?.matches) { renderMatches(); return; }
-
-        // Actualizar liveScores sin hacer downgrade de status activo
-        // (el API gratuito a veces devuelve TIMED para partidos en curso)
         const STATUS_RANK = { 'FINISHED': 4, 'IN_PLAY': 3, 'PAUSED': 2, 'TIMED': 0, 'SCHEDULED': 0 };
-        data.matches.forEach(m => {
-            const key = `${m.home_team}|${m.away_team}`;
-            const existing = liveScores[key];
-            const newRank = STATUS_RANK[m.status] ?? 0;
-            const existRank = existing ? (STATUS_RANK[existing.status] ?? 0) : 0;
-            // Si el nuevo dato tiene score, siempre actualizamos el score aunque no mejore status
-            if (newRank >= existRank) {
-                liveScores[key] = m;
-            } else if (m.home_score !== null && existing) {
-                liveScores[key] = { ...existing, home_score: m.home_score, away_score: m.away_score };
-            }
-        });
-
-        // Auto-guardar resultados finales y recalcular puntos
         let changed = false;
-        for (const m of data.matches) {
-            if (m.status === 'FINISHED' && m.home_score !== null && m.away_score !== null) {
-                const internalMatch = matches.find(match =>
-                    stripFlag(match.team1) === m.home_team &&
-                    stripFlag(match.team2) === m.away_team
+
+        for (const event of events) {
+            const comp = event.competitions?.[0];
+            if (!comp) continue;
+            const home = comp.competitors?.find(c => c.homeAway === 'home');
+            const away = comp.competitors?.find(c => c.homeAway === 'away');
+            if (!home || !away) continue;
+
+            const homeEs = ESPN_TO_ES[home.team.displayName];
+            const awayEs = ESPN_TO_ES[away.team.displayName];
+            if (!homeEs || !awayEs) continue; // skip placeholders de fase eliminatoria
+
+            const statusType = event.status?.type || {};
+            const state = statusType.state;
+            let ourStatus;
+            if (state === 'post') ourStatus = 'FINISHED';
+            else if (statusType.name === 'STATUS_HALFTIME') ourStatus = 'PAUSED';
+            else if (state === 'in') ourStatus = 'IN_PLAY';
+            else ourStatus = 'TIMED';
+
+            const homeScore = parseInt(home.score) || 0;
+            const awayScore = parseInt(away.score) || 0;
+            const minute = event.status?.displayClock || '';
+
+            const key = `${homeEs}|${awayEs}`;
+            const existing = liveScores[key];
+            const newRank = STATUS_RANK[ourStatus] ?? 0;
+            const existRank = existing ? (STATUS_RANK[existing.status] ?? 0) : 0;
+
+            if (newRank >= existRank) {
+                liveScores[key] = { home_team: homeEs, away_team: awayEs, home_score: homeScore, away_score: awayScore, status: ourStatus, minute };
+            }
+
+            // Auto-guardar resultados finales con patrón individual (result:matchId)
+            if (ourStatus === 'FINISHED') {
+                const internalMatch = matches.find(m =>
+                    stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
                 );
                 if (internalMatch && !results.find(r => r.matchId === internalMatch.id)) {
-                    results.push({ matchId: internalMatch.id, score1: m.home_score, score2: m.away_score });
+                    results.push({ matchId: internalMatch.id, score1: homeScore, score2: awayScore });
+                    await storage.set(`result:${internalMatch.id}`, { matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     changed = true;
                     logAction(sessionStorage.getItem('pollaUser'), 'auto_save_result', {
-                        matchId: internalMatch.id, home: m.home_team, away: m.away_team,
-                        score: `${m.home_score}-${m.away_score}`
+                        matchId: internalMatch.id, home: homeEs, away: awayEs,
+                        score: `${homeScore}-${awayScore}`
                     });
                 }
             }
         }
 
         if (changed) {
-            await storage.set('results', results);
             await init();
             showToast('✅ Resultados actualizados automáticamente');
         } else {
             renderMatches();
         }
-    } catch (e) { console.warn('Live scores error:', e); }
+    } catch (e) { console.warn('ESPN live scores error:', e); renderMatches(); }
 }
 
 function startLivePolling() {
@@ -1035,6 +1068,69 @@ function renderMatches() {
             </div>`
         );
     }
+
+    document.getElementById('pendingBanner')?.remove();
+    if (me) {
+        const now = new Date();
+        const nowPE = new Date(now.toLocaleString('en-US', { timeZone: 'America/Lima' }));
+        const tomorrowPE = new Date(nowPE); tomorrowPE.setDate(tomorrowPE.getDate() + 1);
+        const toDS = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const todayStr = toDS(nowPE);
+        const tomorrowStr = toDS(tomorrowPE);
+
+        const upcomingMatches = matches
+            .filter(m => {
+                if (!m.dateTime || isMatchLocked(m)) return false;
+                const mPE = new Date(new Date(m.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' }));
+                const mStr = toDS(mPE);
+                return mStr === todayStr || mStr === tomorrowStr;
+            })
+            .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+        const totalOpenPending = matches
+            .filter(m => !isMatchLocked(m))
+            .filter(m => !me.predictions.find(p => p.matchId === m.id))
+            .length;
+
+        if (upcomingMatches.length > 0) {
+            const unpredicted = upcomingMatches.filter(m => !me.predictions.find(p => p.matchId === m.id));
+            const items = upcomingMatches.map(m => {
+                const hasPick = !!me.predictions.find(p => p.matchId === m.id);
+                const mPE = new Date(new Date(m.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' }));
+                const isToday = toDS(mPE) === todayStr;
+                const dayTag = isToday
+                    ? `<span style="font-size:0.72rem;font-weight:700;color:#00D9FF;background:rgba(0,217,255,0.1);padding:1px 6px;border-radius:4px;">HOY</span>`
+                    : `<span style="font-size:0.72rem;font-weight:700;color:#A0A8C0;background:rgba(160,168,192,0.1);padding:1px 6px;border-radius:4px;">MAÑANA</span>`;
+                const rightSide = hasPick
+                    ? `<span style="color:#00FF88;font-weight:700;white-space:nowrap;">✅ PICK</span>`
+                    : `<span style="font-weight:700;white-space:nowrap;">⏰ ${getTimeUntilLock(m)}</span>`;
+                return `
+                    <div onclick="document.getElementById('match-card-${m.id}')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('match-card-${m.id}')?.classList.add('match-highlight');setTimeout(()=>document.getElementById('match-card-${m.id}')?.classList.remove('match-highlight'),1500);"
+                         style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,165,0,0.12);cursor:pointer;opacity:${hasPick ? '0.7' : '1'};">
+                        <span style="display:flex;align-items:center;gap:6px;">
+                            ${dayTag}
+                            ${m.team1} vs ${m.team2}
+                            <span style="opacity:0.55;font-size:0.8rem;">· Grupo ${m.group}</span>
+                        </span>
+                        ${rightSide}
+                    </div>`;
+            }).join('');
+
+            const header = unpredicted.length > 0
+                ? `⚠️ <strong>${unpredicted.length} partido${unpredicted.length > 1 ? 's' : ''} sin predecir (hoy y mañana)</strong>`
+                : `✅ <strong>Todos los partidos de hoy y mañana predichos</strong>`;
+            const extra = totalOpenPending > unpredicted.length
+                ? ` <span style="opacity:0.55;font-size:0.82rem;">(+${totalOpenPending - unpredicted.length} más adelante)</span>`
+                : '';
+
+            container.insertAdjacentHTML('beforebegin',
+                `<div id="pendingBanner" style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.35);border-radius:12px;padding:14px 18px;margin-bottom:20px;color:#FFA500;font-size:0.9rem;">
+                    <div style="margin-bottom:10px;">${header}${extra} — haz click para ir al partido</div>
+                    ${items}
+                </div>`
+            );
+        }
+    }
     const predictionsActive = document.getElementById('predictions')?.classList.contains('active');
     if (stickyWrapper) stickyWrapper.style.display = predictionsActive ? 'flex' : 'none';
 
@@ -1094,7 +1190,7 @@ function renderMatches() {
                     }
 
                     return `
-                    <div class="match-prediction ${lockedClass}">
+                    <div class="match-prediction ${lockedClass}" id="match-card-${match.id}">
                         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px;">
                             <span class="match-info" style="margin:0;">${formatPETime(match.dateTime)}</span>
                             ${statusBadge}
@@ -1578,16 +1674,21 @@ function switchTab(tabName) {
     }
 }
 
-// Mostrar popup de partidos de hoy
+// Mostrar popup de partidos de hoy y mañana
 function showTodayMatches() {
     const nowPE = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Lima' }));
-    const todayStr = `${nowPE.getFullYear()}-${String(nowPE.getMonth()+1).padStart(2,'0')}-${String(nowPE.getDate()).padStart(2,'0')}`;
+    const tomorrowPE = new Date(nowPE);
+    tomorrowPE.setDate(tomorrowPE.getDate() + 1);
+
+    const toDateStr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const todayStr = toDateStr(nowPE);
+    const tomorrowStr = toDateStr(tomorrowPE);
 
     const todayMatches = matches.filter(m => {
         if (!m.dateTime) return false;
         const matchPE = new Date(new Date(m.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' }));
-        const matchStr = `${matchPE.getFullYear()}-${String(matchPE.getMonth()+1).padStart(2,'0')}-${String(matchPE.getDate()).padStart(2,'0')}`;
-        return matchStr === todayStr;
+        const matchStr = toDateStr(matchPE);
+        return matchStr === todayStr || matchStr === tomorrowStr;
     }).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
     if (todayMatches.length === 0) return;
@@ -1595,23 +1696,34 @@ function showTodayMatches() {
     const dateLabel = nowPE.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Lima' });
     document.getElementById('todayDateLabel').textContent = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
 
+    const username = sessionStorage.getItem('pollaUser');
+    const displayName = localStorage.getItem(`pollaDisplayName:${username}`);
+    const me = participants.find(p => p.name === displayName);
+
     document.getElementById('todayMatchesList').innerHTML = todayMatches.map(match => {
         const locked = isMatchLocked(match);
+        const hasPick = me?.predictions?.find(p => p.matchId === match.id);
         const timeInfo = getTimeUntilLock(match);
         const matchTimePE = new Date(match.dateTime).toLocaleString('es-PE', {
             timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: true
         });
+        const matchDayStr = toDateStr(new Date(new Date(match.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' })));
+        const dayLabel = matchDayStr === todayStr
+            ? `<span style="background:rgba(0,217,255,0.12); color:#00D9FF; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; margin-left:6px;">HOY</span>`
+            : `<span style="background:rgba(160,168,192,0.12); color:#A0A8C0; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; margin-left:6px;">MAÑANA</span>`;
 
         const statusBadge = locked
             ? `<span style="background:rgba(255,51,102,0.15); color:#FF3366; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">🔒 CERRADO</span>`
-            : timeInfo
-                ? `<span style="background:rgba(0,217,255,0.1); color:#00D9FF; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">⏰ ${timeInfo}</span>`
-                : '';
+            : hasPick
+                ? `<span style="background:rgba(0,255,136,0.12); color:#00FF88; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">✅ PICK</span>`
+                : timeInfo
+                    ? `<span style="background:rgba(0,217,255,0.1); color:#00D9FF; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">⏰ ${timeInfo}</span>`
+                    : '';
 
         return `
-            <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:14px 16px; margin-bottom:10px;">
+            <div style="background:rgba(255,255,255,0.04); border:1px solid ${hasPick ? 'rgba(0,255,136,0.15)' : 'rgba(255,255,255,0.07)'}; border-radius:12px; padding:14px 16px; margin-bottom:10px; opacity:${hasPick ? '0.75' : '1'};">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="color:#A0A8C0; font-size:0.8rem;">🕐 ${matchTimePE} PE · Grupo ${match.group}</span>
+                    <span style="color:#A0A8C0; font-size:0.8rem;">🕐 ${matchTimePE} PE · Grupo ${match.group} ${dayLabel}</span>
                     ${statusBadge}
                 </div>
                 <div style="display:flex; align-items:center; justify-content:center; gap:12px; font-size:0.95rem; font-weight:600; color:#fff;">
