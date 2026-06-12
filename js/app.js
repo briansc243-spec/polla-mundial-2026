@@ -902,9 +902,21 @@ async function init() {
         _initLock = false;
     }
 
-    // Cargar resultados
-    const savedResults = await storage.get('results');
-    results = savedResults || [];
+    // Cargar resultados — una clave por partido en polla_data (result:matchId)
+    // Este patrón evita que guardar un resultado borre a los demás
+    const resultList = await storage.list('result:');
+    results = [];
+    if (resultList && resultList.keys.length > 0) {
+        for (const key of resultList.keys) {
+            const r = await storage.get(key);
+            if (r && r.matchId && r.score1 !== null && r.score2 !== null) results.push(r);
+        }
+    }
+    // Fallback al array legacy si no hay claves individuales aún
+    if (results.length === 0) {
+        const savedResults = await storage.get('results');
+        results = savedResults || [];
+    }
 
     renderMatches();
     renderMyPredictions();
@@ -1201,35 +1213,30 @@ async function submitPredictions() {
     showToast(`✅ ${newPredictions.length} predicción(es) guardadas para ${name}`);
 }
 
-// Guardar resultados reales
+// Guardar resultados reales → una clave por partido en polla_data (result:matchId)
+// Nunca se puede borrar un resultado de otro partido accidentalmente
 async function saveResults() {
-    // Siempre re-leer DB para no perder resultados guardados manualmente
-    const freshResults = await storage.get('results') || [];
-
     const inputResults = matches.map(match => {
         const score1Input = document.getElementById(`result1-${match.id}`);
         const score2Input = document.getElementById(`result2-${match.id}`);
         const score1 = score1Input?.value !== '' ? parseInt(score1Input.value) : null;
         const score2 = score2Input?.value !== '' ? parseInt(score2Input.value) : null;
-        return { matchId: match.id, score1, score2 };
+        return { match, score1, score2 };
     }).filter(r => r.score1 !== null && r.score2 !== null);
 
-    // Merge: base = DB fresco, override = inputs con valores
-    const mergedMap = {};
-    freshResults.forEach(r => { mergedMap[r.matchId] = r; });
-    inputResults.forEach(r => { mergedMap[r.matchId] = r; });
-    results = Object.values(mergedMap);
-
-    // Guardia: nunca guardar menos resultados de los que ya hay en DB
-    if (results.length < freshResults.length) {
-        alert(`⚠️ Error: se intentó guardar ${results.length} resultado(s) pero la DB tiene ${freshResults.length}. Recarga la página e intenta de nuevo.`);
+    if (inputResults.length === 0) {
+        alert('No hay resultados para guardar.');
         return;
     }
 
-    await storage.set('results', results);
+    // Guardar cada resultado de forma independiente
+    for (const { match, score1, score2 } of inputResults) {
+        await storage.set(`result:${match.id}`, { matchId: match.id, score1, score2 });
+    }
+
     logAction(sessionStorage.getItem('pollaUser'), 'save_results', {
-        count: results.length,
-        results: results.map(r => ({ matchId: r.matchId, score: `${r.score1}-${r.score2}` }))
+        count: inputResults.length,
+        results: inputResults.map(r => ({ matchId: r.match.id, score: `${r.score1}-${r.score2}` }))
     });
 
     alert('✅ Resultados guardados correctamente');
