@@ -1261,17 +1261,31 @@ input:focus, select:focus {
     }
     .group-standings-table th:first-child,
     .group-standings-table td:first-child {
-        min-width: 130px;
-        padding-left: 10px;
+        min-width: 0;
+        max-width: 120px;
+        width: 120px;
+        padding-left: 8px;
     }
     .group-standings-table th,
     .group-standings-table td {
-        padding: 10px 5px;
+        padding: 10px 4px;
         font-size: 0.8rem;
     }
     .pts-cell { font-size: 1.1rem; }
-    .team-flag { font-size: 1rem; margin-right: 6px; }
-    .team-position { width: 18px; height: 18px; line-height: 18px; margin-right: 6px; font-size: 0.7rem; }
+    .team-flag { font-size: 1rem; margin-right: 4px; }
+    .team-position { width: 18px; height: 18px; line-height: 18px; margin-right: 4px; font-size: 0.7rem; }
+    /* Truncar nombres largos como "Bosnia y Herzegovina" */
+    .team-name-cell {
+        max-width: 100%;
+        overflow: hidden;
+    }
+    .team-name-cell span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+        flex: 1;
+    }
 
     /* Leaderboard: prevent long names overflow */
     .leaderboard-row span:nth-child(2),
