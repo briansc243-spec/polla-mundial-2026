@@ -1018,6 +1018,8 @@ function renderMatches() {
                     const timeInfo = !locked ? getTimeUntilLock(match) : null;
                     const lockedClass = locked ? 'match-locked' : '';
                     const disabledAttr = locked ? 'disabled' : '';
+                    const msLeft = new Date(match.dateTime) - new Date();
+                    const closingSoon = !locked && msLeft > 0 && msLeft < 12 * 60 * 60 * 1000;
 
                     const val1 = savedPred ? savedPred.score1 : '';
                     const val2 = savedPred ? savedPred.score2 : '';
@@ -1026,7 +1028,9 @@ function renderMatches() {
                         ? '<span class="match-status-locked">🔒 TU PICK</span>'
                         : lockedByTime
                             ? '<span class="match-status-locked">🔒 CERRADO</span>'
-                            : timeInfo ? `<span class="match-status-open">⏰ ${timeInfo}</span>` : '';
+                            : timeInfo
+                                ? `<span class="match-status-open${closingSoon ? ' match-closing-soon' : ''}">⏰ ${timeInfo}</span>`
+                                : '';
 
                     // Live score badge
                     const liveKey = `${stripFlag(match.team1)}|${stripFlag(match.team2)}`;

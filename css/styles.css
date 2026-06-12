@@ -1209,6 +1209,15 @@ input:focus, select:focus {
     opacity: 0.3;
 }
 
+/* ── Closing soon badge: pulso ámbar cuando quedan < 12h ── */
+.match-closing-soon {
+    background: rgba(255, 160, 0, 0.15) !important;
+    border-color: #FFA000 !important;
+    color: #FFA000 !important;
+    animation: pulse 1.2s infinite;
+    box-shadow: 0 0 8px rgba(255, 160, 0, 0.3);
+}
+
 /* ── Match card team row ── */
 .match-teams-row {
     display: grid;
