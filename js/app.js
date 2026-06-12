@@ -921,7 +921,9 @@ function renderMyPredictions() {
     }
 
     const saved = new Date(me.timestamp).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
-    subtitle.textContent = `Registradas el ${saved} · No se pueden modificar`;
+    const myStats = calculatePoints(me.predictions, results);
+    const pointsText = myStats.points > 0 ? ` · 🏆 ${myStats.points} pts (${myStats.exact} exactos, ${myStats.tendency} tendencias)` : '';
+    subtitle.textContent = `Registradas el ${saved} · No se pueden modificar${pointsText}`;
 
     // Agrupar predicciones por grupo
     const grouped = {};
@@ -959,17 +961,26 @@ function renderMyPredictions() {
                 const predOutcome = Math.sign(pred.score1 - pred.score2);
                 const resOutcome = Math.sign(result.score1 - result.score2);
                 const isTendency = !isExact && predOutcome === resOutcome;
-                if (isExact) pointsBadge = `<span style="background:rgba(0,255,136,0.15);color:#00FF88;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700;">+3 pts ✓</span>`;
-                else if (isTendency) pointsBadge = `<span style="background:rgba(255,215,0,0.15);color:#FFD700;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700;">+1 pt</span>`;
-                else pointsBadge = `<span style="background:rgba(255,51,102,0.15);color:#FF3366;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700;">0 pts</span>`;
+                if (isExact) pointsBadge = `<span style="background:rgba(0,255,136,0.15);color:#00FF88;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">+3 pts ✓</span>`;
+                else if (isTendency) pointsBadge = `<span style="background:rgba(255,215,0,0.15);color:#FFD700;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">+1 pt</span>`;
+                else pointsBadge = `<span style="background:rgba(255,51,102,0.15);color:#FF3366;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">0 pts</span>`;
             }
 
+            const scoreBlock = result
+                ? `<div style="text-align:center; min-width:80px;">
+                       <div style="background:rgba(0,217,255,0.12);color:#00D9FF;padding:4px 12px;border-radius:8px;font-weight:700;font-size:1rem;">${result.score1} - ${result.score2}</div>
+                       <div style="font-size:0.72rem;color:#A0A8C0;margin-top:3px;">tu pick: ${pred.score1}–${pred.score2}</div>
+                   </div>`
+                : `<div style="text-align:center; min-width:80px;">
+                       <span style="background:rgba(0,217,255,0.08);color:#5A8FA8;padding:4px 12px;border-radius:8px;font-weight:700;font-size:1rem;border:1px dashed rgba(0,217,255,0.2);">${pred.score1} - ${pred.score2}</span>
+                   </div>`;
+
             html += `
-                <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:10px 14px; margin-bottom:6px; font-size:0.88rem;">
-                    <span style="flex:1; color:#e0e0e0;">${match.team1}</span>
-                    <span style="background:rgba(0,217,255,0.12); color:#00D9FF; padding:4px 14px; border-radius:8px; font-weight:700; font-size:1rem; margin:0 8px;">${pred.score1} - ${pred.score2}</span>
-                    <span style="flex:1; text-align:right; color:#e0e0e0;">${match.team2}</span>
-                    <span style="margin-left:10px;">${pointsBadge}</span>
+                <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:10px 14px; margin-bottom:6px; gap:8px;">
+                    <span style="flex:1; font-size:0.88rem; color:#e0e0e0;">${match.team1}</span>
+                    ${scoreBlock}
+                    <span style="flex:1; text-align:right; font-size:0.88rem; color:#e0e0e0;">${match.team2}</span>
+                    <span style="min-width:70px; text-align:right;">${pointsBadge}</span>
                 </div>`;
         });
     });
@@ -1175,6 +1186,10 @@ async function submitPredictions() {
 
 // Guardar resultados reales
 async function saveResults() {
+    // Re-leer DB para no perder resultados guardados manualmente
+    const freshResults = await storage.get('results');
+    if (freshResults) results = freshResults;
+
     const inputResults = matches.map(match => {
         const score1Input = document.getElementById(`result1-${match.id}`);
         const score2Input = document.getElementById(`result2-${match.id}`);
@@ -1183,7 +1198,7 @@ async function saveResults() {
         return { matchId: match.id, score1, score2 };
     }).filter(r => r.score1 !== null && r.score2 !== null);
 
-    // Merge: preserve existing results, override only with inputs that have values
+    // Merge: base = DB fresco, override = inputs con valores
     const mergedMap = {};
     results.forEach(r => { mergedMap[r.matchId] = r; });
     inputResults.forEach(r => { mergedMap[r.matchId] = r; });
