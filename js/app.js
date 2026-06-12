@@ -1175,18 +1175,19 @@ async function submitPredictions() {
 
 // Guardar resultados reales
 async function saveResults() {
-    results = matches.map(match => {
+    const inputResults = matches.map(match => {
         const score1Input = document.getElementById(`result1-${match.id}`);
         const score2Input = document.getElementById(`result2-${match.id}`);
-        const score1 = score1Input.value !== '' ? parseInt(score1Input.value) : null;
-        const score2 = score2Input.value !== '' ? parseInt(score2Input.value) : null;
-        
-        return {
-            matchId: match.id,
-            score1,
-            score2
-        };
+        const score1 = score1Input?.value !== '' ? parseInt(score1Input.value) : null;
+        const score2 = score2Input?.value !== '' ? parseInt(score2Input.value) : null;
+        return { matchId: match.id, score1, score2 };
     }).filter(r => r.score1 !== null && r.score2 !== null);
+
+    // Merge: preserve existing results, override only with inputs that have values
+    const mergedMap = {};
+    results.forEach(r => { mergedMap[r.matchId] = r; });
+    inputResults.forEach(r => { mergedMap[r.matchId] = r; });
+    results = Object.values(mergedMap);
 
     await storage.set('results', results);
     logAction(sessionStorage.getItem('pollaUser'), 'save_results', {
