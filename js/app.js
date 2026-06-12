@@ -1087,28 +1087,36 @@ function renderMatches() {
             })
             .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
-        const totalOpenPending = matches
-            .filter(m => !isMatchLocked(m))
-            .filter(m => !me.predictions.find(p => p.matchId === m.id))
-            .length;
-
         if (upcomingMatches.length > 0) {
             const unpredicted = upcomingMatches.filter(m => !me.predictions.find(p => p.matchId === m.id));
+            const capB = s => s.charAt(0).toUpperCase() + s.slice(1);
+            const todayLabelB = capB(nowPE.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Lima' }));
+            const tomorrowLabelB = capB(tomorrowPE.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Lima' }));
+            let lastDayBanner = null;
             const items = upcomingMatches.map(m => {
                 const hasPick = !!me.predictions.find(p => p.matchId === m.id);
                 const mPE = new Date(new Date(m.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' }));
-                const isToday = toDS(mPE) === todayStr;
-                const dayTag = isToday
-                    ? `<span style="font-size:0.72rem;font-weight:700;color:#00D9FF;background:rgba(0,217,255,0.1);padding:1px 6px;border-radius:4px;">HOY</span>`
-                    : `<span style="font-size:0.72rem;font-weight:700;color:#A0A8C0;background:rgba(160,168,192,0.1);padding:1px 6px;border-radius:4px;">MAÑANA</span>`;
+                const mDayStr = toDS(mPE);
+                const isToday = mDayStr === todayStr;
                 const rightSide = hasPick
                     ? `<span style="color:#00FF88;font-weight:700;white-space:nowrap;">✅ PICK</span>`
                     : `<span style="font-weight:700;white-space:nowrap;">⏰ ${getTimeUntilLock(m)}</span>`;
-                return `
+
+                let separator = '';
+                if (mDayStr !== lastDayBanner) {
+                    lastDayBanner = mDayStr;
+                    const sepLabel = isToday ? 'HOY' : 'MAÑANA';
+                    const sepDate = isToday ? todayLabelB : tomorrowLabelB;
+                    separator = `<div style="display:flex;align-items:center;gap:6px;margin:${isToday ? '2px' : '10px'} 0 6px;padding-top:${isToday ? '0' : '6px'};">
+                        <span style="font-weight:700;font-size:0.78rem;color:#FFA500;">${sepLabel}</span>
+                        <span style="opacity:0.6;font-size:0.78rem;">· ${sepDate}</span>
+                    </div>`;
+                }
+
+                return `${separator}
                     <div onclick="document.getElementById('match-card-${m.id}')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('match-card-${m.id}')?.classList.add('match-highlight');setTimeout(()=>document.getElementById('match-card-${m.id}')?.classList.remove('match-highlight'),1500);"
-                         style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,165,0,0.12);cursor:pointer;opacity:${hasPick ? '0.7' : '1'};">
-                        <span style="display:flex;align-items:center;gap:6px;">
-                            ${dayTag}
+                         style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 6px 8px;border-bottom:1px solid rgba(255,165,0,0.12);cursor:pointer;opacity:${hasPick ? '0.7' : '1'};">
+                        <span>
                             ${m.team1} vs ${m.team2}
                             <span style="opacity:0.55;font-size:0.8rem;">· Grupo ${m.group}</span>
                         </span>
@@ -1116,17 +1124,26 @@ function renderMatches() {
                     </div>`;
             }).join('');
 
-            const header = unpredicted.length > 0
-                ? `⚠️ <strong>${unpredicted.length} partido${unpredicted.length > 1 ? 's' : ''} sin predecir (hoy y mañana)</strong>`
+            const totalGroupMatches = matches.filter(m => m.group !== undefined && m.group !== null).length;
+            const isOpen = sessionStorage.getItem('pendingBannerOpen') !== 'false';
+            const headerText = unpredicted.length > 0
+                ? `⚠️ <strong>${unpredicted.length} partido${unpredicted.length > 1 ? 's' : ''} sin predecir hoy y mañana</strong>`
                 : `✅ <strong>Todos los partidos de hoy y mañana predichos</strong>`;
-            const extra = totalOpenPending > unpredicted.length
-                ? ` <span style="opacity:0.55;font-size:0.82rem;">(+${totalOpenPending - unpredicted.length} más adelante)</span>`
-                : '';
+            const progress = `<span style="opacity:0.6;font-size:0.82rem;">${savedCount}/${totalGroupMatches} completadas</span>`;
 
             container.insertAdjacentHTML('beforebegin',
-                `<div id="pendingBanner" style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.35);border-radius:12px;padding:14px 18px;margin-bottom:20px;color:#FFA500;font-size:0.9rem;">
-                    <div style="margin-bottom:10px;">${header}${extra} — haz click para ir al partido</div>
-                    ${items}
+                `<div id="pendingBanner" style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.35);border-radius:12px;padding:12px 18px;margin-bottom:20px;color:#FFA500;font-size:0.9rem;">
+                    <div onclick="(function(){const open=sessionStorage.getItem('pendingBannerOpen')!=='false';sessionStorage.setItem('pendingBannerOpen',open?'false':'true');const body=document.getElementById('pendingBannerBody');const arrow=document.getElementById('pendingBannerArrow');if(body)body.style.display=open?'none':'block';if(arrow)arrow.textContent=open?'▸':'▾';})()"
+                         style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;gap:10px;">
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <span class="${unpredicted.length > 0 ? 'pending-banner-pulse' : ''}">${headerText}</span>
+                            ${progress}
+                        </div>
+                        <span id="pendingBannerArrow" style="font-size:0.9rem;flex-shrink:0;">${isOpen ? '▾' : '▸'}</span>
+                    </div>
+                    <div id="pendingBannerBody" style="display:${isOpen ? 'block' : 'none'};margin-top:10px;">
+                        ${items}
+                    </div>
                 </div>`
             );
         }
@@ -1156,7 +1173,7 @@ function renderMatches() {
                     const disabledAttr = locked ? 'disabled' : '';
                     const savedResult = results.find(r => r.matchId === match.id);
                     const msLeft = new Date(match.dateTime) - new Date();
-                    const closingSoon = !locked && !savedResult && msLeft > 0 && msLeft < 12 * 60 * 60 * 1000;
+                    const closingSoon = !locked && !savedResult && msLeft > 0 && msLeft < 48 * 60 * 60 * 1000;
 
                     const val1 = savedPred ? savedPred.score1 : '';
                     const val2 = savedPred ? savedPred.score2 : '';
@@ -1700,6 +1717,11 @@ function showTodayMatches() {
     const displayName = localStorage.getItem(`pollaDisplayName:${username}`);
     const me = participants.find(p => p.name === displayName);
 
+    const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+    const todayLabel = cap(nowPE.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Lima' }));
+    const tomorrowLabel = cap(tomorrowPE.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Lima' }));
+
+    let lastDayModal = null;
     document.getElementById('todayMatchesList').innerHTML = todayMatches.map(match => {
         const locked = isMatchLocked(match);
         const hasPick = me?.predictions?.find(p => p.matchId === match.id);
@@ -1708,9 +1730,7 @@ function showTodayMatches() {
             timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: true
         });
         const matchDayStr = toDateStr(new Date(new Date(match.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' })));
-        const dayLabel = matchDayStr === todayStr
-            ? `<span style="background:rgba(0,217,255,0.12); color:#00D9FF; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; margin-left:6px;">HOY</span>`
-            : `<span style="background:rgba(160,168,192,0.12); color:#A0A8C0; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; margin-left:6px;">MAÑANA</span>`;
+        const isToday = matchDayStr === todayStr;
 
         const statusBadge = locked
             ? `<span style="background:rgba(255,51,102,0.15); color:#FF3366; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">🔒 CERRADO</span>`
@@ -1720,10 +1740,23 @@ function showTodayMatches() {
                     ? `<span style="background:rgba(0,217,255,0.1); color:#00D9FF; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">⏰ ${timeInfo}</span>`
                     : '';
 
-        return `
+        let separator = '';
+        if (matchDayStr !== lastDayModal) {
+            lastDayModal = matchDayStr;
+            const sepColor = isToday ? '#00D9FF' : '#A0A8C0';
+            const sepLabel = isToday ? 'HOY' : 'MAÑANA';
+            const sepDate = isToday ? todayLabel : tomorrowLabel;
+            separator = `<div style="display:flex;align-items:center;gap:8px;margin:${isToday ? '0' : '16px'} 0 10px;">
+                <span style="color:${sepColor};font-weight:700;font-size:0.78rem;">${sepLabel}</span>
+                <span style="color:${sepColor};opacity:0.7;font-size:0.78rem;">· ${sepDate}</span>
+                <div style="flex:1;height:1px;background:rgba(${isToday ? '0,217,255' : '160,168,192'},0.2);"></div>
+            </div>`;
+        }
+
+        return `${separator}
             <div style="background:rgba(255,255,255,0.04); border:1px solid ${hasPick ? 'rgba(0,255,136,0.15)' : 'rgba(255,255,255,0.07)'}; border-radius:12px; padding:14px 16px; margin-bottom:10px; opacity:${hasPick ? '0.75' : '1'};">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="color:#A0A8C0; font-size:0.8rem;">🕐 ${matchTimePE} PE · Grupo ${match.group} ${dayLabel}</span>
+                    <span style="color:#A0A8C0; font-size:0.8rem;">🕐 ${matchTimePE} PE · Grupo ${match.group}</span>
                     ${statusBadge}
                 </div>
                 <div style="display:flex; align-items:center; justify-content:center; gap:12px; font-size:0.95rem; font-weight:600; color:#fff;">
@@ -1732,8 +1765,7 @@ function showTodayMatches() {
                     <span>${match.team2}</span>
                 </div>
                 <div style="color:#A0A8C0; font-size:0.78rem; text-align:center; margin-top:6px;">📍 ${match.venue}</div>
-            </div>
-        `;
+            </div>`;
     }).join('');
 
     const modal = document.getElementById('todayMatchesModal');

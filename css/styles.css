@@ -1232,6 +1232,9 @@ input:focus, select:focus {
 .match-highlight {
     animation: match-flash 1.5s ease-out forwards;
 }
+.pending-banner-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
 
 /* ── Mis picks card ── */
 .pick-card {
