@@ -1399,6 +1399,18 @@ async function submitPredictions() {
     };
 
     await storage.set(`participant:${name}`, participant);
+
+    try {
+        await db().from('polla_saves').insert({
+            display_name: name,
+            username: sessionStorage.getItem('pollaUser'),
+            predictions: newPredictions,
+            match_count: newPredictions.length
+        });
+    } catch (e) {
+        console.warn('polla_saves insert error:', e);
+    }
+
     logAction(sessionStorage.getItem('pollaUser'), 'save_predictions', {
         display_name: name,
         count: newPredictions.length,
