@@ -1515,15 +1515,10 @@ function updateLeaderboard() {
         const participant = participants.find(pt => pt.name === p.name);
         const sp = participant?.specialPredictions || {};
         const specialCount = [sp.champion, sp.runnerUp, sp.thirdPlace, sp.topScorer].filter(v => v && v.trim()).length;
-        const regTs = participant?.createdAt || participant?.timestamp;
-        const regDate = regTs ? new Date(regTs).toLocaleString('es-PE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' }) : '';
         return `
         <div class="leaderboard-row">
             <span class="rank rank-${index + 1}">${index + 1}</span>
-            <span>
-                ${p.name}
-                ${regDate ? `<br><span style="font-size:0.72rem;color:var(--text-dim);font-weight:400;">${regDate}</span>` : ''}
-            </span>
+            <span>${p.name}</span>
             <span class="points">${p.points}</span>
             <span>${p.exact}</span>
             <span>${p.tendency}</span>
