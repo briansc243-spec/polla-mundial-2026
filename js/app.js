@@ -1121,6 +1121,7 @@ function renderMyPredictions() {
 
             html += `
                 <div class="pick-card">
+                    <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px;">${formatPETime(match.dateTime)}</div>
                     <div class="pick-card-teams">
                         <span class="pick-team pick-team-left">${match.team1}</span>
                         ${scoreBlock}
