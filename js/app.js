@@ -1062,10 +1062,12 @@ function renderMyPredictions() {
         return;
     }
 
-    const saved = new Date(me.timestamp).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
+    const fmtDateTime = ts => new Date(ts).toLocaleString('es-PE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' });
+    const registeredAt = me.createdAt ? fmtDateTime(me.createdAt) : fmtDateTime(me.timestamp);
+    const updatedAt = me.timestamp && me.createdAt && me.timestamp !== me.createdAt ? ` · Actualizado: ${fmtDateTime(me.timestamp)}` : '';
     const myStats = calculatePoints(me.predictions, results);
     const pointsText = myStats.points > 0 ? ` · 🏆 ${myStats.points} pts (${myStats.exact} exactos, ${myStats.tendency} tendencias)` : '';
-    subtitle.textContent = `Registradas el ${saved} · No se pueden modificar${pointsText}`;
+    subtitle.textContent = `Registrado: ${registeredAt}${updatedAt}${pointsText}`;
 
     // Agrupar predicciones por grupo
     const grouped = {};
@@ -1392,6 +1394,7 @@ async function submitPredictions() {
         username: sessionStorage.getItem('pollaUser'),
         predictions: mergedPredictions,
         specialPredictions: existingParticipant?.specialPredictions || {},
+        createdAt: existingParticipant?.createdAt || Date.now(),
         timestamp: Date.now()
     };
 
@@ -1500,10 +1503,15 @@ function updateLeaderboard() {
         const participant = participants.find(pt => pt.name === p.name);
         const sp = participant?.specialPredictions || {};
         const specialCount = [sp.champion, sp.runnerUp, sp.thirdPlace, sp.topScorer].filter(v => v && v.trim()).length;
+        const regTs = participant?.createdAt || participant?.timestamp;
+        const regDate = regTs ? new Date(regTs).toLocaleString('es-PE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' }) : '';
         return `
         <div class="leaderboard-row">
             <span class="rank rank-${index + 1}">${index + 1}</span>
-            <span>${p.name}</span>
+            <span>
+                ${p.name}
+                ${regDate ? `<br><span style="font-size:0.72rem;color:var(--text-dim);font-weight:400;">${regDate}</span>` : ''}
+            </span>
             <span class="points">${p.points}</span>
             <span>${p.exact}</span>
             <span>${p.tendency}</span>
