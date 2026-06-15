@@ -739,17 +739,16 @@ function renderLiveBar() {
             const teams = `${m.team1} vs ${stripFlag(m.team2)} ${flag2}`;
 
             if (result) {
-                return `<span>${teams} <span style="color:#00D9FF;" class="live-bar-dim">${result.score1}-${result.score2} FINAL</span></span>`;
+                return `<span style="color:#00D9FF;">${teams} · ${result.score1}-${result.score2} FINAL</span>`;
+            }
+            if (isLiveNow && lm.status === 'PAUSED') {
+                return `<span style="color:#00FF88;">⏸ Descanso · ${teams} · ${lm.home_score}-${lm.away_score}</span>`;
             }
             if (isLiveNow) {
-                const badge = lm.status === 'PAUSED'
-                    ? `<span class="live-bar-label">⏸ Descanso</span>`
-                    : `<span class="live-bar-label">🔴 En Vivo</span>`;
-                const minText = lm.status === 'PAUSED' ? 'Descanso' : (lm.minute ? `${lm.minute}'` : '');
-                const score = `${lm.home_score}-${lm.away_score}${minText ? ' · ' + minText : ''}`;
-                return `<span>${badge} ${teams} <span class="live-bar-dim">⚽ ${score}</span></span>`;
+                const minText = lm.minute ? `${lm.minute}'` : '';
+                return `<span style="color:#00FF88;"><span class="live-bar-label">🔴 En Vivo</span> ${teams} · ⚽ ${lm.home_score}-${lm.away_score}${minText ? ' · ' + minText : ''}</span>`;
             }
-            return `<span>${teams} <span class="live-bar-dim">${hour}</span></span>`;
+            return `<span style="color:rgba(0,255,136,0.45);font-weight:400;">${teams} · ${hour}</span>`;
         });
     const copyHtml = allItems.join(sep);
 
