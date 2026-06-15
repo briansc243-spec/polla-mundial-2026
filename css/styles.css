@@ -316,7 +316,8 @@ h1 {
     color: #00FF88;
 }
 
-#liveBar:hover .live-bar-track {
+#liveBar { cursor: pointer; }
+#liveBar.ticker-paused .live-bar-track {
     animation-play-state: paused;
 }
 

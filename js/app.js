@@ -759,6 +759,7 @@ function renderLiveBar() {
             <div class="live-bar-copy" aria-hidden="true">${copyHtml}</div>
         </div>`;
     bar.style.display = 'block';
+    bar.onclick = () => bar.classList.toggle('ticker-paused');
 }
 
 function startLivePolling() {
