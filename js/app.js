@@ -638,7 +638,7 @@ async function fetchLiveScores() {
         const res = await fetch(
             'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719'
         );
-        if (!res.ok) { renderMatches(); return; }
+        if (!res.ok) { renderMatches(); renderLiveBar(); return; }
         const data = await res.json();
         const events = data.events || [];
 
@@ -701,7 +701,7 @@ async function fetchLiveScores() {
             renderMatches();
         }
         renderLiveBar();
-    } catch (e) { console.warn('ESPN live scores error:', e); renderMatches(); }
+    } catch (e) { console.warn('ESPN live scores error:', e); renderMatches(); renderLiveBar(); }
 }
 
 function renderLiveBar() {
@@ -1090,6 +1090,7 @@ async function init() {
     }
 
     renderMatches();
+    renderLiveBar();
     renderMyPredictions();
     renderResults();
     renderGroups();
