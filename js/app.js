@@ -708,55 +708,48 @@ function renderLiveBar() {
     const bar = document.getElementById('liveBar');
     if (!bar) return;
 
-    const live = Object.values(liveScores).filter(s => s.status === 'IN_PLAY' || s.status === 'PAUSED');
-    if (live.length === 0) { bar.style.display = 'none'; return; }
-
-    const allPaused = live.every(s => s.status === 'PAUSED');
-    bar.className = allPaused ? 'paused-only' : '';
-
     const now = new Date();
-    const nowPE = new Date(now.toLocaleString('en-US', { timeZone: 'America/Lima' }));
-    const toDS = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const todayStr = toDS(nowPE);
+    const todayPE = now.toLocaleDateString('es-PE', { timeZone: 'America/Lima' });
 
-    const sep = '<span class="live-bar-sep">|</span>';
+    const todayMatches = matches
+        .filter(m => m.dateTime && new Date(m.dateTime).toLocaleDateString('es-PE', { timeZone: 'America/Lima' }) === todayPE)
+        .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
-    // Todos los partidos de HOY ordenados por hora
-    const allItems = matches
-        .filter(m => {
-            if (!m.dateTime) return false;
-            const mPE = new Date(new Date(m.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' }));
-            return toDS(mPE) === todayStr;
-        })
-        .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
-        .map(m => {
-            const liveKey = `${stripFlag(m.team1)}|${stripFlag(m.team2)}`;
-            const lm = liveScores[liveKey];
-            const isLiveNow = lm && (lm.status === 'IN_PLAY' || lm.status === 'PAUSED');
-            const result = results.find(r => r.matchId === m.id);
-            const hour = new Date(m.dateTime).toLocaleString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: true });
-            const flag2 = m.team2.replace(stripFlag(m.team2), '').trim();
-            const teams = `${m.team1} vs ${stripFlag(m.team2)} ${flag2}`;
+    if (todayMatches.length === 0) { bar.style.display = 'none'; return; }
 
-            if (result) {
-                return `<span style="color:#00D9FF;">${teams} · ${result.score1}-${result.score2} FINAL</span>`;
-            }
-            if (isLiveNow && lm.status === 'PAUSED') {
-                return `<span style="color:#00FF88;">⏸ Descanso · ${teams} · ${lm.home_score}-${lm.away_score}</span>`;
-            }
-            if (isLiveNow) {
-                const minText = lm.minute ? `${lm.minute}'` : '';
-                return `<span style="color:#00FF88;"><span class="live-bar-label">🔴 En Vivo</span> ${teams} · ⚽ ${lm.home_score}-${lm.away_score}${minText ? ' · ' + minText : ''}</span>`;
-            }
-            return `<span style="color:rgba(0,255,136,0.45);font-weight:400;">${teams} · ${hour}</span>`;
-        });
-    const copyHtml = allItems.join(sep);
+    function teamLocal(full) {
+        const name = stripFlag(full);
+        const flag = full.slice(0, full.indexOf(name)).trim();
+        return `${flag} ${name}`.trim();
+    }
+    function teamVisit(full) {
+        const name = stripFlag(full);
+        const flag = full.slice(0, full.indexOf(name)).trim();
+        return `${name} ${flag}`.trim();
+    }
 
-    bar.innerHTML = `
-        <div class="live-bar-track">
-            <div class="live-bar-copy">${copyHtml}</div>
-            <div class="live-bar-copy" aria-hidden="true">${copyHtml}</div>
-        </div>`;
+    const sep = `<span class="live-bar-sep"> | </span>`;
+    const items = todayMatches.map(m => {
+        const key = `${stripFlag(m.team1)}|${stripFlag(m.team2)}`;
+        const live = liveScores[key];
+        const result = results.find(r => r.matchId === m.id);
+        const t1 = teamLocal(m.team1);
+        const t2 = teamVisit(m.team2);
+
+        if (result) {
+            return `<span style="color:#00D9FF;">${t1} vs ${t2} · ${result.score1}-${result.score2} FINAL</span>`;
+        } else if (live && live.status === 'IN_PLAY') {
+            return `<span style="color:#00FF88;"><span class="live-bar-label">🔴 En Vivo</span> ${t1} vs ${t2} · ⚽ ${live.home_score}-${live.away_score} · ${live.minute}</span>`;
+        } else if (live && live.status === 'PAUSED') {
+            return `<span style="color:#00FF88;">⏸ Descanso · ${t1} vs ${t2} · ${live.home_score}-${live.away_score}</span>`;
+        } else {
+            const timePE = new Date(m.dateTime).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/Lima' });
+            return `<span class="live-bar-dim">${t1} vs ${t2} · ${timePE}</span>`;
+        }
+    });
+
+    const content = items.join(sep);
+    bar.innerHTML = `<div class="live-bar-track"><div class="live-bar-copy">${content}</div><div class="live-bar-copy" aria-hidden="true">${content}</div></div>`;
     bar.style.display = 'block';
 }
 
