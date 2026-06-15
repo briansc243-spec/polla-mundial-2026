@@ -700,7 +700,65 @@ async function fetchLiveScores() {
         } else {
             renderMatches();
         }
+        renderLiveBar();
     } catch (e) { console.warn('ESPN live scores error:', e); renderMatches(); }
+}
+
+function renderLiveBar() {
+    const bar = document.getElementById('liveBar');
+    if (!bar) return;
+
+    const live = Object.values(liveScores).filter(s => s.status === 'IN_PLAY' || s.status === 'PAUSED');
+    if (live.length === 0) { bar.style.display = 'none'; return; }
+
+    const allPaused = live.every(s => s.status === 'PAUSED');
+    bar.className = allPaused ? 'paused-only' : '';
+
+    const now = new Date();
+    const nowPE = new Date(now.toLocaleString('en-US', { timeZone: 'America/Lima' }));
+    const toDS = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const todayStr = toDS(nowPE);
+
+    const sep = '<span class="live-bar-sep">|</span>';
+
+    // Todos los partidos de HOY ordenados por hora
+    const allItems = matches
+        .filter(m => {
+            if (!m.dateTime) return false;
+            const mPE = new Date(new Date(m.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' }));
+            return toDS(mPE) === todayStr;
+        })
+        .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+        .map(m => {
+            const liveKey = `${stripFlag(m.team1)}|${stripFlag(m.team2)}`;
+            const lm = liveScores[liveKey];
+            const isLiveNow = lm && (lm.status === 'IN_PLAY' || lm.status === 'PAUSED');
+            const result = results.find(r => r.matchId === m.id);
+            const hour = new Date(m.dateTime).toLocaleString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: true });
+            const flag2 = m.team2.replace(stripFlag(m.team2), '').trim();
+            const teams = `${m.team1} vs ${stripFlag(m.team2)} ${flag2}`;
+
+            if (result) {
+                return `<span>${teams} <span style="color:#00D9FF;" class="live-bar-dim">${result.score1}-${result.score2} FINAL</span></span>`;
+            }
+            if (isLiveNow) {
+                const badge = lm.status === 'PAUSED'
+                    ? `<span class="live-bar-label">⏸ Descanso</span>`
+                    : `<span class="live-bar-label">🔴 En Vivo</span>`;
+                const minText = lm.status === 'PAUSED' ? 'Descanso' : (lm.minute ? `${lm.minute}'` : '');
+                const score = `${lm.home_score}-${lm.away_score}${minText ? ' · ' + minText : ''}`;
+                return `<span>${badge} ${teams} <span class="live-bar-dim">⚽ ${score}</span></span>`;
+            }
+            return `<span>${teams} <span class="live-bar-dim">${hour}</span></span>`;
+        });
+    const copyHtml = allItems.join(sep);
+
+    bar.innerHTML = `
+        <div class="live-bar-track">
+            <div class="live-bar-copy">${copyHtml}</div>
+            <div class="live-bar-copy" aria-hidden="true">${copyHtml}</div>
+        </div>`;
+    bar.style.display = 'block';
 }
 
 function startLivePolling() {
