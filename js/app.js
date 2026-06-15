@@ -1528,7 +1528,7 @@ function updateLeaderboard() {
     }).join('');
 }
 
-// Pronósticos públicos: visibles 2 min después del inicio del partido
+// Pronósticos públicos: visibles desde el inicio del partido
 function renderAllPicks() {
     const container = document.getElementById('allPicksContainer');
     if (!container) return;
@@ -1536,12 +1536,12 @@ function renderAllPicks() {
     try {
     const now = new Date();
     const eligible = matches
-        .filter(m => new Date(m.dateTime).getTime() + 2 * 60 * 1000 < now.getTime())
+        .filter(m => new Date(m.dateTime).getTime() < now.getTime())
         .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
     if (eligible.length === 0) {
         container.innerHTML = `<p style="color:var(--text-dim);text-align:center;padding:24px;font-size:0.9rem;">
-            Aún no hay partidos en curso. Los pronósticos se revelan al minuto 2 de cada partido.
+            Aún no hay partidos en curso. Los pronósticos se revelan al inicio de cada partido.
         </p>`;
         return;
     }
