@@ -816,7 +816,7 @@ function getTimeUntilLock(match) {
 }
 
 // Deadline predicciones especiales: martes 16 jun 2026, fin del día PE
-const SPECIAL_DEADLINE = new Date('2026-06-17T00:00:00-05:00');
+const SPECIAL_DEADLINE = new Date('2026-06-20T00:00:00-05:00');
 
 function isSpecialDeadlinePassed() {
     return new Date() >= SPECIAL_DEADLINE;
