@@ -815,7 +815,7 @@ function getTimeUntilLock(match) {
     }
 }
 
-// Deadline predicciones especiales: martes 16 jun 2026, fin del día PE
+// Deadline predicciones especiales: viernes 19 jun 2026, fin del día PE
 const SPECIAL_DEADLINE = new Date('2026-06-20T00:00:00-05:00');
 
 function isSpecialDeadlinePassed() {
@@ -851,7 +851,7 @@ function initSpecialPredictions() {
         if (btn) btn.style.display = 'none';
         if (banner) banner.innerHTML = `
             <div style="background:rgba(255,50,50,0.1);border:1px solid rgba(255,80,80,0.4);border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#FF6B6B;font-size:0.88rem;">
-                🔒 El plazo para predicciones especiales venció el martes 16 de junio.
+                🔒 El plazo para predicciones especiales venció el viernes 19 de junio.
             </div>`;
     } else if (alreadySaved) {
         // Ya guardó — mostrar bloqueado con opción de editar hasta el deadline
@@ -865,7 +865,7 @@ function initSpecialPredictions() {
         }
         if (banner) banner.innerHTML = `
             <div style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#00FF88;font-size:0.88rem;">
-                ✅ Predicciones especiales guardadas. Puedes editarlas hasta el <strong>martes 16 de junio</strong>.
+                ✅ Predicciones especiales guardadas. Puedes editarlas hasta el <strong>viernes 19 de junio</strong>.
             </div>`;
     } else {
         // Nunca guardó — mostrar deadline
@@ -884,7 +884,7 @@ function initSpecialPredictions() {
             const hoursLeft = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             banner.innerHTML = `
                 <div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.35);border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#FFD700;font-size:0.88rem;">
-                    ⏳ Tienes hasta el <strong>martes 16 de junio</strong> para guardar.
+                    ⏳ Tienes hasta el <strong>viernes 19 de junio</strong> para guardar.
                     Faltan <strong>${daysLeft > 0 ? daysLeft + 'd ' : ''}${hoursLeft}h</strong>.
                 </div>`;
         }
@@ -906,7 +906,7 @@ function unlockSpecialPredictions() {
 
 async function saveSpecialPredictions() {
     if (isSpecialDeadlinePassed()) {
-        showToast('🔒 El plazo venció el martes 16 de junio');
+        showToast('🔒 El plazo venció el viernes 19 de junio');
         return;
     }
 
