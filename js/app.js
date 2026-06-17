@@ -550,7 +550,7 @@ const defaultMatches = [
     { id: 37, group: 'G', team1: '🇧🇪 Bélgica', team2: '🇪🇬 Egipto', dateTime: '2026-06-15T14:00:00-05:00', venue: 'Lumen Field, Seattle' },
     { id: 38, group: 'G', team1: '🇮🇷 Irán', team2: '🇳🇿 Nueva Zelanda', dateTime: '2026-06-15T20:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
     { id: 39, group: 'G', team1: '🇧🇪 Bélgica', team2: '🇮🇷 Irán', dateTime: '2026-06-21T14:00:00-05:00', venue: 'SoFi Stadium, Los Ángeles' },
-    { id: 40, group: 'G', team1: '🇳🇿 Nueva Zelanda', team2: '🇪🇬 Egipto', dateTime: '2026-06-22T20:00:00-05:00', venue: 'BC Place, Vancouver' },
+    { id: 40, group: 'G', team1: '🇳🇿 Nueva Zelanda', team2: '🇪🇬 Egipto', dateTime: '2026-06-21T20:00:00-05:00', venue: 'BC Place, Vancouver' },
     { id: 41, group: 'G', team1: '🇪🇬 Egipto', team2: '🇮🇷 Irán', dateTime: '2026-06-26T22:00:00-05:00', venue: 'Lumen Field, Seattle' },
     { id: 42, group: 'G', team1: '🇳🇿 Nueva Zelanda', team2: '🇧🇪 Bélgica', dateTime: '2026-06-26T22:00:00-05:00', venue: 'BC Place, Vancouver' },
 
@@ -579,7 +579,7 @@ const defaultMatches = [
     { id: 60, group: 'J', team1: '🇩🇿 Algeria', team2: '🇦🇹 Austria', dateTime: '2026-06-27T21:00:00-05:00', venue: 'GEHA Field, Kansas City' },
 
     // GRUPO K — Portugal, Congo DR, Colombia, Uzbekistán
-    { id: 61, group: 'K', team1: '🇺🇿 Uzbekistán', team2: '🇨🇴 Colombia', dateTime: '2026-06-18T21:00:00-05:00', venue: 'Estadio Banorte, Ciudad de México' },
+    { id: 61, group: 'K', team1: '🇺🇿 Uzbekistán', team2: '🇨🇴 Colombia', dateTime: '2026-06-17T21:00:00-05:00', venue: 'Estadio Banorte, Ciudad de México' },
     { id: 62, group: 'K', team1: '🇵🇹 Portugal', team2: '🇨🇩 Congo DR', dateTime: '2026-06-17T12:00:00-05:00', venue: 'NRG Stadium, Houston' },
     { id: 63, group: 'K', team1: '🇨🇴 Colombia', team2: '🇨🇩 Congo DR', dateTime: '2026-06-23T21:00:00-05:00', venue: 'Estadio Akron, Guadalajara' },
     { id: 64, group: 'K', team1: '🇵🇹 Portugal', team2: '🇺🇿 Uzbekistán', dateTime: '2026-06-23T12:00:00-05:00', venue: 'NRG Stadium, Houston' },
