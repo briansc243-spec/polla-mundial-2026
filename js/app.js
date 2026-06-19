@@ -683,7 +683,8 @@ async function fetchLiveScores() {
                     stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
                 );
                 const matchKickoff = internalMatch ? new Date(internalMatch.dateTime) : null;
-                if (internalMatch && matchKickoff <= new Date() && !results.find(r => r.matchId === internalMatch.id)) {
+                const minFinishTime = matchKickoff ? new Date(matchKickoff.getTime() + 100 * 60 * 1000) : null;
+                if (internalMatch && minFinishTime <= new Date() && !results.find(r => r.matchId === internalMatch.id)) {
                     results.push({ matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     await storage.set(`result:${internalMatch.id}`, { matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     changed = true;
