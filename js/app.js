@@ -678,13 +678,11 @@ async function fetchLiveScores() {
             }
 
             // Auto-guardar resultados finales con patrón individual (result:matchId)
-            if (ourStatus === 'FINISHED') {
+            if (statusType.name === 'STATUS_FULL_TIME') {
                 const internalMatch = matches.find(m =>
                     stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
                 );
-                const matchKickoff = internalMatch ? new Date(internalMatch.dateTime) : null;
-                const minFinishTime = matchKickoff ? new Date(matchKickoff.getTime() + 100 * 60 * 1000) : null;
-                if (internalMatch && minFinishTime <= new Date() && !results.find(r => r.matchId === internalMatch.id)) {
+                if (internalMatch && !results.find(r => r.matchId === internalMatch.id)) {
                     results.push({ matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     await storage.set(`result:${internalMatch.id}`, { matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     changed = true;
