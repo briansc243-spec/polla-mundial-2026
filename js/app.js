@@ -1452,6 +1452,18 @@ async function submitPredictions() {
 
     await storage.set(`participant:${name}`, participant);
 
+    // Actualizar estado local sin recargar todo desde BD
+    const idx = participants.findIndex(p => p.name === name);
+    if (idx >= 0) participants[idx] = participant;
+    else participants.push(participant);
+
+    renderMatches();
+    renderMyPredictions();
+    updateLeaderboard();
+    updateStats();
+
+    showToast(`✅ ${newPredictions.length} predicción(es) guardadas para ${name}`);
+
     try {
         await db().from('polla_saves').insert({
             display_name: name,
@@ -1468,11 +1480,6 @@ async function submitPredictions() {
         count: newPredictions.length,
         matches: newPredictions.map(p => ({ matchId: p.matchId, score: `${p.score1}-${p.score2}` }))
     });
-
-    // Recargar datos
-    await init();
-
-    showToast(`✅ ${newPredictions.length} predicción(es) guardadas para ${name}`);
 }
 
 // Guardar resultados reales → una clave por partido en polla_data (result:matchId)
