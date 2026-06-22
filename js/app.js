@@ -678,11 +678,13 @@ async function fetchLiveScores() {
             }
 
             // Auto-guardar resultados finales con patrón individual (result:matchId)
+            // Doble guard: ESPN STATUS_FULL_TIME + kickoff ya pasó (ESPN a veces pre-carga STATUS_FULL_TIME en partidos futuros)
             if (statusType.name === 'STATUS_FULL_TIME') {
                 const internalMatch = matches.find(m =>
                     stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
                 );
-                if (internalMatch && !results.find(r => r.matchId === internalMatch.id)) {
+                const kickoffPassed = internalMatch && new Date(internalMatch.dateTime) <= new Date();
+                if (internalMatch && kickoffPassed && !results.find(r => r.matchId === internalMatch.id)) {
                     results.push({ matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     await storage.set(`result:${internalMatch.id}`, { matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     changed = true;
