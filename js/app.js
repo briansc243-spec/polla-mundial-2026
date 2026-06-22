@@ -673,14 +673,19 @@ async function fetchLiveScores() {
             const newRank = STATUS_RANK[ourStatus] ?? 0;
             const existRank = existing ? (STATUS_RANK[existing.status] ?? 0) : 0;
 
-            // Solo actualizar liveScores si el partido ya comenzó (evita mostrar datos falsos de ESPN en partidos futuros)
-            const internalMatchForDisplay = matches.find(m =>
-                stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
-            );
-            const kickoffPassedForDisplay = !internalMatchForDisplay || new Date(internalMatchForDisplay.dateTime) <= new Date();
+            // Si ESPN dice SCHEDULED (pre), limpiar cualquier dato incorrecto que pueda estar en memoria
+            if (state === 'pre') {
+                delete liveScores[key];
+            } else {
+                // Solo actualizar liveScores si el partido ya comenzó (evita datos falsos de ESPN en partidos futuros)
+                const internalMatchForDisplay = matches.find(m =>
+                    stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
+                );
+                const kickoffPassedForDisplay = !internalMatchForDisplay || new Date(internalMatchForDisplay.dateTime) <= new Date();
 
-            if (newRank >= existRank && kickoffPassedForDisplay) {
-                liveScores[key] = { home_team: homeEs, away_team: awayEs, home_score: homeScore, away_score: awayScore, status: ourStatus, minute };
+                if (newRank >= existRank && kickoffPassedForDisplay) {
+                    liveScores[key] = { home_team: homeEs, away_team: awayEs, home_score: homeScore, away_score: awayScore, status: ourStatus, minute };
+                }
             }
 
             // Auto-guardar resultados finales con patrón individual (result:matchId)
