@@ -1098,10 +1098,47 @@ input:focus, select:focus {
 
 .special-predictions-container {
     background: var(--dark-3);
-    padding: 25px;
     border-radius: 15px;
     margin-bottom: 30px;
     border: 2px solid var(--primary);
+    overflow: hidden;
+}
+
+.special-predictions-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 25px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--accent);
+    gap: 10px;
+}
+
+.special-predictions-summary::-webkit-details-marker { display: none; }
+.special-predictions-summary::marker { display: none; }
+
+.special-predictions-summary:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.special-chevron {
+    font-size: 1.4rem;
+    color: var(--primary);
+    transition: transform 0.25s ease;
+    line-height: 1;
+}
+
+.special-predictions-container[open] .special-chevron {
+    transform: rotate(180deg);
+}
+
+.special-predictions-body {
+    padding: 0 25px 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .special-predictions-grid {
