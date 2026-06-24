@@ -306,6 +306,18 @@ async function showMainApp() {
         lockParticipantName(savedName);
         applyRoleUI(username);
         document.getElementById('mainApp').style.display = 'block';
+
+        // Mostrar modal de partidos de hoy/mañana ANTES de init()
+        // Solo necesita matches (ya en memoria) y el pick del usuario (1 query)
+        const shownKey = `todayMatchesShown:${username}`;
+        if (!sessionStorage.getItem(shownKey)) {
+            sessionStorage.setItem(shownKey, 'true');
+            matches = defaultMatches;
+            const myData = await storage.get(`participant:${savedName}`);
+            if (myData) participants = [myData];
+            showTodayMatches();
+        }
+
         init();
     }
 }
@@ -492,6 +504,19 @@ const storage = {
         } catch (e) {
             console.error('storage.list', prefix, e);
             return { keys: [] };
+        }
+    },
+    getAll: async (prefix) => {
+        try {
+            const { data, error } = await db()
+                .from('polla_data')
+                .select('key, value')
+                .like('key', `${prefix}%`);
+            if (error) throw error;
+            return (data ?? []).map(r => r.value);
+        } catch (e) {
+            console.error('storage.getAll', prefix, e);
+            return [];
         }
     }
 };
@@ -1052,47 +1077,33 @@ async function init() {
     _initLock = true;
 
     try {
-        // Los partidos siempre vienen del código (no se guardan en BD)
         matches = defaultMatches;
 
-        // Cargar participantes
-        try {
-            const listResult = await storage.list('participant:');
-            const keys = listResult ? listResult.keys : [];
-            const loaded = [];
-            for (const key of keys) {
-                const data = await storage.get(key);
-                if (data) loaded.push(data);
-            }
-            // Deduplicar por nombre y excluir al admin (no aparece en tabla/stats)
-            const seen = new Set();
-            participants = loaded.filter(p => {
-                if (p.username === 'admin') return false;
-                if (seen.has(p.name)) return false;
-                seen.add(p.name);
-                return true;
-            });
-        } catch (error) {
-            participants = [];
+        // Cargar participantes y resultados en paralelo — 2 queries simultáneas
+        const [rawParticipants, rawResults] = await Promise.all([
+            storage.getAll('participant:'),
+            storage.getAll('result:')
+        ]);
+
+        // Deduplicar participantes y excluir admin
+        const seen = new Set();
+        participants = rawParticipants.filter(p => {
+            if (!p || p.username === 'admin') return false;
+            if (seen.has(p.name)) return false;
+            seen.add(p.name);
+            return true;
+        });
+
+        // Filtrar resultados válidos
+        results = rawResults.filter(r => r && r.matchId !== undefined && r.score1 !== null && r.score2 !== null);
+
+        // Fallback al array legacy si no hay claves individuales
+        if (results.length === 0) {
+            const savedResults = await storage.get('results');
+            results = savedResults || [];
         }
     } finally {
         _initLock = false;
-    }
-
-    // Cargar resultados — una clave por partido en polla_data (result:matchId)
-    // Este patrón evita que guardar un resultado borre a los demás
-    const resultList = await storage.list('result:');
-    results = [];
-    if (resultList && resultList.keys.length > 0) {
-        for (const key of resultList.keys) {
-            const r = await storage.get(key);
-            if (r && r.matchId && r.score1 !== null && r.score2 !== null) results.push(r);
-        }
-    }
-    // Fallback al array legacy si no hay claves individuales aún
-    if (results.length === 0) {
-        const savedResults = await storage.get('results');
-        results = savedResults || [];
     }
 
     renderMatches();
@@ -1100,16 +1111,11 @@ async function init() {
     renderMyPredictions();
     renderResults();
     renderGroups();
+    renderKnockoutBracket();
+    renderKnockoutPredictions();
     updateLeaderboard();
     updateStats();
     initSpecialPredictions();
-
-    const username = sessionStorage.getItem('pollaUser');
-    const shownKey = `todayMatchesShown:${username}`;
-    if (!sessionStorage.getItem(shownKey)) {
-        sessionStorage.setItem(shownKey, 'true');
-        showTodayMatches();
-    }
 }
 
 // Renderizar "Mis Predicciones" (solo lectura)
@@ -1858,6 +1864,12 @@ function switchTab(tabName) {
     if (tabName === 'myPredictions') {
         renderMyPredictions();
     }
+    if (tabName === 'groups') {
+        renderKnockoutBracket();
+    }
+    if (tabName === 'predictions') {
+        renderKnockoutPredictions();
+    }
 }
 
 // Mostrar popup de partidos de hoy y mañana
@@ -1947,3 +1959,373 @@ function closeTodayModal() {
 
 // Iniciar aplicación
 init();
+// ==========================================
+// BRACKET ELIMINATORIO — datos y lógica
+// ==========================================
+
+const BRACKET = {
+    r32: {
+        key: 'r32',
+        emoji: '🏆',
+        title: 'Dieciseisavos de Final',
+        subtitle: '16 partidos · Round of 32',
+        startDate: '~28 jun',
+        accentBorder: 'rgba(0,217,255,0.35)',
+        matches: [
+            { id: 'P73',  slot1: '1° Grupo A', slot2: '2° Grupo B', time: '28 jun · 5:00 PM PE', venue: 'MetLife Stadium, Nueva Jersey' },
+            { id: 'P74',  slot1: '2° Grupo A', slot2: '1° Grupo B', time: '28 jun · 8:00 PM PE', venue: 'SoFi Stadium, Los Ángeles' },
+            { id: 'P75',  slot1: '1° Grupo C', slot2: '2° Grupo D', time: '29 jun · 5:00 PM PE', venue: 'AT&T Stadium, Arlington' },
+            { id: 'P76',  slot1: '2° Grupo C', slot2: '1° Grupo D', time: '29 jun · 8:00 PM PE', venue: 'Mercedes-Benz Stadium, Atlanta' },
+            { id: 'P77',  slot1: '1° Grupo E', slot2: '2° Grupo F', time: '30 jun · 5:00 PM PE', venue: 'Lumen Field, Seattle' },
+            { id: 'P78',  slot1: '2° Grupo E', slot2: '1° Grupo F', time: '30 jun · 8:00 PM PE', venue: 'Hard Rock Stadium, Miami' },
+            { id: 'P79',  slot1: '1° Grupo G', slot2: '2° Grupo H', time: '1 jul · 5:00 PM PE', venue: 'NRG Stadium, Houston' },
+            { id: 'P80',  slot1: '2° Grupo G', slot2: '1° Grupo H', time: '1 jul · 8:00 PM PE', venue: 'BC Place, Vancouver' },
+            { id: 'P81',  slot1: '1° Grupo I', slot2: '2° Grupo J', time: '2 jul · 5:00 PM PE', venue: 'GEHA Field, Kansas City' },
+            { id: 'P82',  slot1: '2° Grupo I', slot2: '1° Grupo J', time: '2 jul · 8:00 PM PE', venue: 'Gillette Stadium, Boston' },
+            { id: 'P83',  slot1: '1° Grupo K', slot2: '2° Grupo L', time: '3 jul · 5:00 PM PE', venue: 'Estadio Akron, Guadalajara' },
+            { id: 'P84',  slot1: '2° Grupo K', slot2: '1° Grupo L', time: '3 jul · 8:00 PM PE', venue: "Levi's Stadium, Santa Clara" },
+            { id: 'P85',  slot1: 'Mejor 3° (A/B/C/D)', slot2: 'Mejor 3° (E/F/G/H)', time: '4 jul · 5:00 PM PE', venue: 'Lincoln Financial Field, Filadelfia' },
+            { id: 'P86',  slot1: 'Mejor 3° (I/J/K/L)', slot2: 'Mejor 3° (A/E/I)',    time: '4 jul · 8:00 PM PE', venue: 'Estadio BBVA, Monterrey' },
+            { id: 'P87',  slot1: 'Mejor 3° (B/F/J)',   slot2: 'Mejor 3° (C/G/K)',    time: '5 jul · 5:00 PM PE', venue: 'BMO Field, Toronto' },
+            { id: 'P88',  slot1: 'Mejor 3° (D/H/L)',   slot2: 'Mejor 3° (A/B/C/D/E/F/G/H/I/J/K/L)', time: '5 jul · 8:00 PM PE', venue: 'NRG Stadium, Houston' },
+        ]
+    },
+    r16: {
+        key: 'r16',
+        emoji: '⚔️',
+        title: 'Octavos de Final',
+        subtitle: '8 partidos · Round of 16',
+        startDate: '~5 jul',
+        accentBorder: 'rgba(0,217,255,0.55)',
+        matches: [
+            { id: 'P89',  slot1: 'Gan. P73', slot2: 'Gan. P74', time: '5 jul · 5:00 PM PE', venue: 'MetLife Stadium' },
+            { id: 'P90',  slot1: 'Gan. P75', slot2: 'Gan. P76', time: '5 jul · 8:00 PM PE', venue: 'AT&T Stadium' },
+            { id: 'P91',  slot1: 'Gan. P77', slot2: 'Gan. P78', time: '6 jul · 5:00 PM PE', venue: 'Lumen Field' },
+            { id: 'P92',  slot1: 'Gan. P79', slot2: 'Gan. P80', time: '6 jul · 8:00 PM PE', venue: 'NRG Stadium' },
+            { id: 'P93',  slot1: 'Gan. P81', slot2: 'Gan. P82', time: '7 jul · 5:00 PM PE', venue: 'GEHA Field' },
+            { id: 'P94',  slot1: 'Gan. P83', slot2: 'Gan. P84', time: '7 jul · 8:00 PM PE', venue: 'Estadio Akron' },
+            { id: 'P95',  slot1: 'Gan. P85', slot2: 'Gan. P86', time: '8 jul · 5:00 PM PE', venue: 'Lincoln Financial Field' },
+            { id: 'P96',  slot1: 'Gan. P87', slot2: 'Gan. P88', time: '8 jul · 8:00 PM PE', venue: 'Estadio BBVA' },
+        ]
+    },
+    qf: {
+        key: 'qf',
+        emoji: '🛡️',
+        title: 'Cuartos de Final',
+        subtitle: '4 partidos · Quarterfinals',
+        startDate: '~9 jul',
+        accentBorder: 'rgba(0,255,136,0.5)',
+        matches: [
+            { id: 'P97',  slot1: 'Gan. P89', slot2: 'Gan. P90', time: '9 jul · 5:00 PM PE',  venue: 'SoFi Stadium' },
+            { id: 'P98',  slot1: 'Gan. P91', slot2: 'Gan. P92', time: '9 jul · 8:00 PM PE',  venue: 'MetLife Stadium' },
+            { id: 'P99',  slot1: 'Gan. P93', slot2: 'Gan. P94', time: '10 jul · 5:00 PM PE', venue: 'NRG Stadium' },
+            { id: 'P100', slot1: 'Gan. P95', slot2: 'Gan. P96', time: '10 jul · 8:00 PM PE', venue: 'AT&T Stadium' },
+        ]
+    },
+    sf: {
+        key: 'sf',
+        emoji: '🔥',
+        title: 'Semifinales',
+        subtitle: '2 partidos · Semifinals',
+        startDate: '~14 jul',
+        accentBorder: 'rgba(255,51,102,0.55)',
+        matches: [
+            { id: 'P101', slot1: 'Gan. P97',  slot2: 'Gan. P98',  time: '14 jul · 7:00 PM PE', venue: 'MetLife Stadium' },
+            { id: 'P102', slot1: 'Gan. P99',  slot2: 'Gan. P100', time: '15 jul · 7:00 PM PE', venue: 'AT&T Stadium' },
+        ]
+    },
+    third: {
+        key: 'third',
+        emoji: '🥉',
+        title: 'Tercer Puesto',
+        subtitle: '1 partido · Third Place',
+        startDate: '18 jul',
+        accentBorder: 'rgba(180,140,80,0.6)',
+        matches: [
+            { id: 'P103', slot1: 'Perd. P101', slot2: 'Perd. P102', time: '18 jul · 7:00 PM PE', venue: 'Hard Rock Stadium, Miami' },
+        ]
+    },
+    final: {
+        key: 'final',
+        emoji: '🏆',
+        title: 'Gran Final',
+        subtitle: '1 partido · World Cup Final',
+        startDate: '19 jul',
+        accentBorder: 'rgba(255,215,0,0.7)',
+        isFinal: true,
+        matches: [
+            { id: 'P104', slot1: 'Gan. P101', slot2: 'Gan. P102', time: '19 jul · 5:00 PM PE', venue: 'MetLife Stadium, Nueva Jersey' },
+        ]
+    }
+};
+
+const GROUPS_TAB_ROUNDS     = ['r32', 'r16', 'qf', 'sf', 'third', 'final'];
+const PREDICTIONS_TAB_ROUNDS = ['r32', 'r16', 'qf', 'sf', 'third', 'final'];
+
+// Calcula standings de cada grupo desde results[] globales
+function getGroupStandings() {
+    const groupLetters = [...new Set(
+        matches.filter(m => m.group && m.group.length === 1).map(m => m.group)
+    )].sort();
+
+    const standings = {};
+    for (const g of groupLetters) {
+        const gMatches = matches.filter(m => m.group === g);
+        const stats = {};
+        gMatches.forEach(m => {
+            [m.team1, m.team2].forEach(t => {
+                if (!stats[t]) stats[t] = { team: t, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0 };
+            });
+        });
+        gMatches.forEach(m => {
+            const r = results.find(r => r.matchId === m.id);
+            if (!r) return;
+            stats[m.team1].pj++; stats[m.team2].pj++;
+            stats[m.team1].gf += r.score1; stats[m.team1].gc += r.score2;
+            stats[m.team2].gf += r.score2; stats[m.team2].gc += r.score1;
+            if (r.score1 > r.score2) { stats[m.team1].g++; stats[m.team2].p++; }
+            else if (r.score1 < r.score2) { stats[m.team2].g++; stats[m.team1].p++; }
+            else { stats[m.team1].e++; stats[m.team2].e++; }
+        });
+        standings[g] = Object.values(stats).map(s => ({
+            ...s, pts: s.g * 3 + s.e, dg: s.gf - s.gc
+        })).sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf || a.gc - b.gc);
+    }
+    return standings;
+}
+
+// Selecciona y asigna los 8 mejores terceros con greedy
+function computeBestThirds(groupStandings) {
+    const thirds = [];
+    for (const [g, teams] of Object.entries(groupStandings)) {
+        const third = teams[2];
+        if (third && third.pj > 0) thirds.push({ ...third, group: g });
+    }
+    // Sort: pts desc → DG desc → GF desc → GC asc (menos goles concedidos es mejor)
+    thirds.sort((a, b) =>
+        b.pts - a.pts || b.dg - a.dg || b.gf - a.gf || a.gc - b.gc
+    );
+    const best8 = thirds.slice(0, 8);
+
+    // Todos los grupos terminados (6 partidos c/u)
+    const allDone = Object.keys(groupStandings).length === 12 &&
+        Object.entries(groupStandings).every(([g, teams]) => {
+            const gMatches = matches.filter(m => m.group === g);
+            return gMatches.every(m => results.find(r => r.matchId === m.id));
+        });
+
+    // Obtener todos los slots "Mejor 3°" en orden de bracket
+    const mejorSlots = [];
+    for (const match of BRACKET.r32.matches) {
+        [match.slot1, match.slot2].forEach(s => {
+            if (s.startsWith('Mejor 3°') && !mejorSlots.includes(s)) mejorSlots.push(s);
+        });
+    }
+
+    // Asignación greedy
+    const slotMap = {};
+    const used = new Set();
+    for (const slot of mejorSlots) {
+        const m = slot.match(/\(([^)]+)\)/);
+        if (!m) continue;
+        const groups = m[1].split('/');
+        const best = best8.find(t => !used.has(t.group) && groups.includes(t.group));
+        if (best) { slotMap[slot] = best; used.add(best.group); }
+    }
+
+    return { best8, allDone, slotMap };
+}
+
+// Resuelve un slot a { team, badge }
+function resolveSlot(slot, groupStandings, bestThirds) {
+    // "Mejor 3° (A/B/C/D)"
+    if (slot.startsWith('Mejor 3°')) {
+        const assigned = bestThirds?.slotMap?.[slot];
+        if (assigned) {
+            const badge = bestThirds.allDone
+                ? '<span class="ko-badge-clasif">✓ CLASIF.</span>'
+                : '<span class="ko-badge-probable">~ PROBABLE</span>';
+            return { team: assigned.team, badge };
+        }
+        return { team: slot, badge: '' };
+    }
+
+    // "1° Grupo A" / "2° Grupo A"
+    const gm = slot.match(/^(\d+)°\s*Grupo\s*([A-L])$/);
+    if (gm && groupStandings) {
+        const rank  = parseInt(gm[1]) - 1;
+        const group = gm[2];
+        const teams = groupStandings[group];
+        if (teams && teams[rank] && teams[rank].pj > 0) {
+            const t = teams[rank];
+            const gMatches = matches.filter(m => m.group === group);
+            const played   = gMatches.filter(m => results.find(r => r.matchId === m.id)).length;
+            const done     = played === gMatches.length;
+            const badge = done
+                ? '<span class="ko-badge-clasif">✓ CLASIF.</span>'
+                : '<span class="ko-badge-probable">~ PROBABLE</span>';
+            return { team: t.team, badge };
+        }
+    }
+
+    // "Gan. P73" / "Perd. P101" — pasa como texto
+    return { team: slot, badge: '' };
+}
+
+// ── Toggle colapsable ──────────────────────────────────────────────────────
+function toggleKnockoutRound(key) {
+    const body  = document.getElementById(`kp-body-${key}`);
+    const arrow = document.getElementById(`kp-arrow-${key}`);
+    if (!body) return;
+    const isOpen = body.classList.toggle('open');
+    if (arrow) arrow.classList.toggle('open', isOpen);
+}
+
+// Helpers para render bracket/predicciones
+function _koTeamCell(slot, groupStandings, bestThirds, alignRight) {
+    const r = resolveSlot(slot, groupStandings, bestThirds);
+    const shortSlot = slot.replace('Mejor 3° ', '3° ');
+    const alignClass = alignRight ? ' kp-right' : '';
+    if (r && r.team && !r.team.startsWith('Gan.') && !r.team.startsWith('Perd.') && r.team !== slot) {
+        const icon  = r.badge.includes('CLASIF') ? '✓' : '~';
+        const color = r.badge.includes('CLASIF') ? '#00FF88' : '#FFD700';
+        return `<div class="kp-team-cell${alignClass}">
+            <span class="kp-slot-tag" style="color:${color};">${icon} ${shortSlot}</span>
+            <span class="kp-team-display">${r.team}</span>
+        </div>`;
+    }
+    return `<div class="kp-team-cell${alignClass}">
+        <span class="kp-slot-tag">${shortSlot}</span>
+        <span class="kp-team-display kp-tbd">Por definir</span>
+    </div>`;
+}
+
+// ── Render bracket (tab Grupos — 5 rondas desde Octavos) ──────────────────
+function renderKnockoutBracket() {
+    const container = document.getElementById('knockoutBracketSection');
+    if (!container) return;
+
+    const groupStandings = getGroupStandings();
+    const bestThirds     = computeBestThirds(groupStandings);
+
+    const ROUND_MOD = { r16: '--r16', qf: '--qf', sf: '--sf', third: '--3rd', final: '--final', r32: '' };
+    const START_LABELS = { r16: '5 JUL', qf: '9 JUL', sf: '14 JUL', third: '18 JUL', final: '19 JUL', r32: '28 JUN' };
+
+    const cardsHtml = GROUPS_TAB_ROUNDS.map(key => {
+        const round = BRACKET[key];
+        const mod   = ROUND_MOD[key] || '';
+        const label = START_LABELS[key] || round.startDate.toUpperCase();
+
+        const matchRows = round.matches.map(match => {
+            const s1 = resolveSlot(match.slot1, groupStandings, bestThirds);
+            const s2 = resolveSlot(match.slot2, groupStandings, bestThirds);
+            return `
+            <div class="match-prediction kp-pending" style="pointer-events:none;">
+                <div class="kp-match-top">
+                    <span class="match-info">${match.id} · ${match.time}</span>
+                </div>
+                <div class="match-teams-row">
+                    ${_koTeamCell(match.slot1, groupStandings, bestThirds, false)}
+                    <div></div><div></div>
+                    ${_koTeamCell(match.slot2, groupStandings, bestThirds, true)}
+                </div>
+                <div class="match-info kp-venue">📍 ${match.venue}</div>
+            </div>`;
+        }).join('');
+
+        return `
+        <div class="r32-section r32-section${mod}">
+            <div class="r32-header kp-toggle-header" onclick="toggleKnockoutRound('bracket_${key}')" role="button">
+                <div>
+                    <h4 class="kp-round-title">${round.emoji} ${round.title}</h4>
+                    <p class="r32-subtitle">${round.subtitle}</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                    <div class="r32-start-badge r32-start-badge${mod}">
+                        <span class="r32-start-label">INICIO</span>
+                        <span class="r32-start-date">${label}</span>
+                    </div>
+                    <span class="special-toggle-arrow" id="kp-arrow-bracket_${key}">▼</span>
+                </div>
+            </div>
+            <div class="kp-body" id="kp-body-bracket_${key}">
+                ${matchRows}
+            </div>
+        </div>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="ko-section-header">
+            <h3>⚔️ Bracket Eliminatorio</h3>
+            <p>Equipos probables basados en los standings actuales · se actualiza automáticamente</p>
+        </div>
+        ${cardsHtml}`;
+}
+
+// ── Render predicciones knockouts (tab Predicciones — 6 rondas, bloqueadas) ─
+function renderKnockoutPredictions() {
+    const container = document.getElementById('knockoutPredictionsSection');
+    if (!container) return;
+
+    const groupStandings = getGroupStandings();
+    const bestThirds     = computeBestThirds(groupStandings);
+
+    const ROUND_MOD = { r32: '', r16: '--r16', qf: '--qf', sf: '--sf', third: '--3rd', final: '--final' };
+    const START_LABELS = { r32: '28 JUN', r16: '5 JUL', qf: '9 JUL', sf: '14 JUL', third: '18 JUL', final: '19 JUL' };
+
+    const cardsHtml = PREDICTIONS_TAB_ROUNDS.map(key => {
+        const round = BRACKET[key];
+        const mod   = ROUND_MOD[key] || '';
+        const label = START_LABELS[key] || round.startDate.toUpperCase();
+
+        const matchRows = round.matches.map(match => {
+            return `
+            <div class="match-prediction kp-pending">
+                <div class="kp-match-top">
+                    <span class="match-info">${match.id} · ${match.time}</span>
+                    <span class="kp-locked-chip">🔒 Sin abrir</span>
+                </div>
+                <div class="match-teams-row">
+                    ${_koTeamCell(match.slot1, groupStandings, bestThirds, false)}
+                    <input type="number" class="score-input" disabled min="0" max="20" placeholder="-">
+                    <input type="number" class="score-input" disabled min="0" max="20" placeholder="-">
+                    ${_koTeamCell(match.slot2, groupStandings, bestThirds, true)}
+                </div>
+                <div class="match-info kp-venue">📍 ${match.venue}</div>
+            </div>`;
+        }).join('');
+
+        return `
+        <div class="r32-section r32-section${mod}">
+            <div class="r32-header kp-toggle-header" onclick="toggleKnockoutRound('pred_${key}')" role="button">
+                <div>
+                    <h4 class="kp-round-title">${round.emoji} ${round.title}</h4>
+                    <p class="r32-subtitle">${round.subtitle}</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                    <div class="r32-start-badge r32-start-badge${mod}">
+                        <span class="r32-start-label">INICIO</span>
+                        <span class="r32-start-date">${label}</span>
+                    </div>
+                    <span class="special-toggle-arrow" id="kp-arrow-pred_${key}">▼</span>
+                </div>
+            </div>
+            <div class="kp-body" id="kp-body-pred_${key}">
+                ${matchRows}
+            </div>
+        </div>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="ko-section-header" style="margin-top:36px;">
+            <h3>🏆 Predicciones Fase Eliminatoria</h3>
+        </div>
+        <div class="kp-locked-notice">
+            <span style="font-size:1.6rem;flex-shrink:0;line-height:1;margin-top:2px;">🔒</span>
+            <div>
+                <p class="kp-lock-title">Predicciones Fase Eliminatoria — Sin abrir</p>
+                <p class="kp-lock-body">Se habilitarán cuando se definan los 32 clasificados (~28 jun). Puedes ver el bracket tentativo basado en los standings actuales de grupos.</p>
+            </div>
+        </div>
+        ${cardsHtml}`;
+}

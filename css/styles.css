@@ -1467,4 +1467,243 @@ input:focus, select:focus {
         min-width: 0;
     }
 }
-    </style>
+
+/* ==========================================
+   KNOCKOUT — bracket + predicciones
+   ========================================== */
+
+/* ── Sección contenedor por ronda ── */
+.r32-section {
+    background: var(--dark-2);
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 18px;
+    margin-bottom: 0;
+}
+.r32-section--r16   { border-color: rgba(0, 217, 255, 0.3); }
+.r32-section--qf    { border-color: rgba(0, 255, 136, 0.3); }
+.r32-section--sf    { border-color: rgba(255, 51, 102, 0.35); }
+.r32-section--3rd   { border-color: rgba(180, 140, 80, 0.4); }
+.r32-section--final {
+    border-color: rgba(255, 215, 0, 0.55);
+    background: linear-gradient(135deg, var(--dark-2) 0%, rgba(255,215,0,0.04) 100%);
+}
+
+/* ── Header colapsable ── */
+.r32-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.kp-toggle-header {
+    cursor: pointer;
+    user-select: none;
+}
+.kp-toggle-header:hover { opacity: 0.88; }
+
+.kp-round-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+    color: var(--text);
+    margin: 0 0 4px;
+}
+.r32-subtitle {
+    color: var(--text-dim);
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+/* ── Badge de fecha por ronda ── */
+.r32-start-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 12px;
+    padding: 10px 18px;
+    flex-shrink: 0;
+}
+.r32-start-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #FFD700;
+    letter-spacing: 2px;
+}
+.r32-start-date {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    color: #FFD700;
+    line-height: 1.1;
+}
+
+.r32-start-badge--r16 { background: rgba(0,217,255,0.1);   border-color: rgba(0,217,255,0.4); }
+.r32-start-badge--r16  .r32-start-label,
+.r32-start-badge--r16  .r32-start-date  { color: #00D9FF; }
+
+.r32-start-badge--qf  { background: rgba(0,255,136,0.1);   border-color: rgba(0,255,136,0.4); }
+.r32-start-badge--qf   .r32-start-label,
+.r32-start-badge--qf   .r32-start-date  { color: #00FF88; }
+
+.r32-start-badge--sf  { background: rgba(255,51,102,0.1);  border-color: rgba(255,51,102,0.4); }
+.r32-start-badge--sf   .r32-start-label,
+.r32-start-badge--sf   .r32-start-date  { color: #FF3366; }
+
+.r32-start-badge--3rd { background: rgba(180,140,80,0.12); border-color: rgba(180,140,80,0.45); }
+.r32-start-badge--3rd  .r32-start-label,
+.r32-start-badge--3rd  .r32-start-date  { color: #C8A060; }
+
+.r32-start-badge--final { background: rgba(255,215,0,0.15); border-color: rgba(255,215,0,0.6); }
+.r32-start-badge--final .r32-start-label,
+.r32-start-badge--final .r32-start-date { color: #FFD700; font-size: 1.7rem; }
+
+/* ── Chevron ── */
+.special-toggle-arrow {
+    font-size: 0.85rem;
+    color: var(--primary);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.special-toggle-arrow.open { transform: rotate(180deg); }
+
+/* ── Body colapsable ── */
+.kp-body {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    transition: max-height 0.4s ease, opacity 0.28s ease, padding-top 0.3s ease;
+}
+.kp-body.open {
+    max-height: 2400px;
+    opacity: 1;
+    padding-top: 18px;
+}
+
+/* ── Match card bloqueado ── */
+.kp-pending {
+    opacity: 0.68;
+    border-left-color: rgba(160, 168, 192, 0.18) !important;
+    background: rgba(255, 255, 255, 0.015) !important;
+    pointer-events: none;
+    margin-bottom: 10px;
+}
+.kp-pending:hover { transform: none !important; box-shadow: none !important; }
+.kp-pending input {
+    opacity: 0.3;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    color: var(--text-dim);
+}
+
+.kp-match-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.kp-locked-chip {
+    font-size: 0.69rem;
+    font-weight: 700;
+    color: rgba(160, 168, 192, 0.55);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* ── Celda de equipo con slot ── */
+.kp-team-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.kp-team-cell.kp-right { text-align: right; }
+.kp-slot-tag {
+    font-size: 0.67rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.kp-team-display {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.kp-tbd {
+    color: var(--text-dim) !important;
+    font-weight: 400 !important;
+    font-style: italic;
+    font-size: 0.78rem !important;
+}
+.kp-venue { margin-top: 5px; font-size: 0.73rem !important; }
+
+/* ── Banner locked notice ── */
+.kp-locked-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: rgba(0, 217, 255, 0.07);
+    border: 1px solid rgba(0, 217, 255, 0.22);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+.kp-lock-title {
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 3px;
+    font-size: 0.95rem;
+}
+.kp-lock-body {
+    color: var(--text-dim);
+    font-size: 0.84rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ── Bracket (tab Grupos) — match row ── */
+.ko-section-header {
+    margin: 32px 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ko-section-header h3 {
+    color: var(--primary);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    margin: 0 0 4px;
+}
+.ko-section-header p {
+    color: var(--text-dim);
+    font-size: 0.83rem;
+    margin: 0;
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+    .r32-section { padding: 16px; }
+    .r32-header { flex-direction: column; }
+    .r32-start-badge { flex-direction: row; gap: 8px; align-self: flex-start; }
+    .r32-start-date { font-size: 1.1rem; }
+    .r32-start-badge--final .r32-start-date { font-size: 1.3rem; }
+    .kp-team-cell.kp-right { text-align: left; }
+}
