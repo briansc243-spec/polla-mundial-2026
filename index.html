@@ -353,21 +353,22 @@
                     </div>
                 </details>
 
-                <!-- Partidos por Grupo -->
-                <h3 class="section-subtitle">📅 Predicciones Fase de Grupos</h3>
-                <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 20px;">
-                    💡 Tip: Consulta la pestaña "Grupos" para ver fechas, horarios y sedes de cada partido
-                </p>
-                <div id="matchesContainer"></div>
-
-                <!-- Fase Eliminatoria — card desplegable -->
-                <details class="special-predictions-container" id="knockoutPredictionsContainer" style="margin-top:28px;">
+                <!-- Partidos por Grupo — card desplegable -->
+                <details class="special-predictions-container" id="groupPredictionsContainer">
                     <summary class="special-predictions-summary">
-                        <span>⚔️ Predicciones Fase Eliminatoria</span>
+                        <span>📅 Predicciones Fase de Grupos</span>
                         <span class="special-chevron">▾</span>
                     </summary>
-                    <div id="knockoutPredictionsSection" style="padding:0 4px 8px;"></div>
+                    <div style="padding:0 4px 8px;">
+                        <p style="color:var(--text-dim);font-size:0.9rem;margin:12px 0 20px;">
+                            💡 Tip: Consulta la pestaña "Grupos" para ver fechas, horarios y sedes
+                        </p>
+                        <div id="matchesContainer"></div>
+                    </div>
                 </details>
+
+                <!-- Fase Eliminatoria — cada ronda es su propio desplegable -->
+                <div id="knockoutPredictionsSection" style="margin-top:4px;"></div>
 
                 <div style="margin-top: 30px; padding: 20px; background: rgba(0, 217, 255, 0.1); border-radius: 12px; border-left: 3px solid var(--primary); margin-bottom: 90px;">
                     <p style="color: var(--text); margin: 0;">

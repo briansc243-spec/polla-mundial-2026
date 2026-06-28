@@ -2398,11 +2398,8 @@ function renderKnockoutPredictions() {
 
     container.innerHTML = `${noticeHtml}${cardsHtml}`;
 
-    // Auto-open the details card and first unlocked round
+    // Auto-open first unlocked round
     if (anyOpen) {
-        const wrapper = document.getElementById('knockoutPredictionsContainer');
-        if (wrapper) wrapper.open = true;
-        // Open first unlocked round if not already open
         const firstOpenKey = PREDICTIONS_TAB_ROUNDS.find(k => _isRoundOpen(k, bestThirds));
         if (firstOpenKey) {
             const body = document.getElementById(`kp-body-pred_${firstOpenKey}`);
