@@ -2396,12 +2396,23 @@ function renderKnockoutPredictions() {
             </div>
            </div>`;
 
-    container.innerHTML = `
-        <div class="ko-section-header" style="margin-top:36px;">
-            <h3>🏆 Predicciones Fase Eliminatoria</h3>
-        </div>
-        ${noticeHtml}
-        ${cardsHtml}`;
+    container.innerHTML = `${noticeHtml}${cardsHtml}`;
+
+    // Auto-open the details card and first unlocked round
+    if (anyOpen) {
+        const wrapper = document.getElementById('knockoutPredictionsContainer');
+        if (wrapper) wrapper.open = true;
+        // Open first unlocked round if not already open
+        const firstOpenKey = PREDICTIONS_TAB_ROUNDS.find(k => _isRoundOpen(k, bestThirds));
+        if (firstOpenKey) {
+            const body = document.getElementById(`kp-body-pred_${firstOpenKey}`);
+            const arrow = document.getElementById(`kp-arrow-pred_${firstOpenKey}`);
+            if (body && !body.classList.contains('open')) {
+                body.classList.add('open');
+                if (arrow) arrow.classList.add('open');
+            }
+        }
+    }
 }
 
 async function submitKnockoutPredictions(roundKey) {
