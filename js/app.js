@@ -2347,7 +2347,7 @@ function renderKnockoutPredictions() {
             let statusChip;
             if (hasResult)               statusChip = `<span class="kp-final-chip">✅ FINAL</span>`;
             else if (inputLocked)        statusChip = `<span class="kp-locked-chip">🔒 Cerrado</span>`;
-            else if (existingPick)       statusChip = `<span class="kp-saved-chip">✅ PICK</span>`;
+            else if (existingPick)       statusChip = `<span class="kp-locked-chip">🔒 TU PICK</span>`;
             else                         statusChip = `<span class="kp-open-chip">📝 Abierto</span>`;
 
             const v1 = existingPick?.score1 ?? '';
