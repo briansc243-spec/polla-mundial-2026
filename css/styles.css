@@ -1620,6 +1620,39 @@ input:focus, select:focus {
     border-radius: 10px;
     white-space: nowrap;
 }
+.kp-open-chip {
+    font-size: 0.69rem;
+    font-weight: 700;
+    color: #FFD700;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.kp-saved-chip {
+    font-size: 0.69rem;
+    font-weight: 700;
+    color: #00FF88;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.kp-final-chip {
+    font-size: 0.69rem;
+    font-weight: 700;
+    color: #00D9FF;
+    background: rgba(0, 217, 255, 0.1);
+    border: 1px solid rgba(0, 217, 255, 0.3);
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.kp-locked-match {
+    opacity: 0.65;
+}
 
 /* ── Celda de equipo con slot ── */
 .kp-team-cell {

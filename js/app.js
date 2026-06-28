@@ -1973,27 +1973,27 @@ const BRACKET = {
         accentBorder: 'rgba(0,217,255,0.35)',
         matches: [
             // 28 junio
-            { id: 'P73',  slot1: '2° Grupo A', slot2: '2° Grupo B',             time: '28 jun · 2:00 PM PE',  venue: 'SoFi Stadium, Los Ángeles' },
+            { id: 'P73',  dateTime: '2026-06-28T19:00:00Z', slot1: '2° Grupo A', slot2: '2° Grupo B',             time: '28 jun · 2:00 PM PE',  venue: 'SoFi Stadium, Los Ángeles' },
             // 29 junio
-            { id: 'P76',  slot1: '1° Grupo C', slot2: '2° Grupo F',             time: '29 jun · 12:00 PM PE', venue: 'NRG Stadium, Houston' },
-            { id: 'P74',  slot1: '1° Grupo E', slot2: 'Mejor 3° (A/B/C/D/F)',   time: '29 jun · 3:30 PM PE',  venue: 'Gillette Stadium, Boston' },
-            { id: 'P75',  slot1: '1° Grupo F', slot2: '2° Grupo C',             time: '29 jun · 8:00 PM PE',  venue: 'Estadio BBVA, Guadalupe' },
+            { id: 'P76',  dateTime: '2026-06-29T17:00:00Z', slot1: '1° Grupo C', slot2: '2° Grupo F',             time: '29 jun · 12:00 PM PE', venue: 'NRG Stadium, Houston' },
+            { id: 'P74',  dateTime: '2026-06-29T20:30:00Z', slot1: '1° Grupo E', slot2: 'Mejor 3° (A/B/C/D/F)',   time: '29 jun · 3:30 PM PE',  venue: 'Gillette Stadium, Boston' },
+            { id: 'P75',  dateTime: '2026-06-30T01:00:00Z', slot1: '1° Grupo F', slot2: '2° Grupo C',             time: '29 jun · 8:00 PM PE',  venue: 'Estadio BBVA, Guadalupe' },
             // 30 junio
-            { id: 'P78',  slot1: '2° Grupo E', slot2: '2° Grupo I',             time: '30 jun · 12:00 PM PE', venue: 'AT&T Stadium, Arlington' },
-            { id: 'P77',  slot1: '1° Grupo I', slot2: 'Mejor 3° (C/D/F/G/H)',   time: '30 jun · 4:00 PM PE',  venue: 'MetLife Stadium, Nueva Jersey' },
-            { id: 'P79',  slot1: '1° Grupo A', slot2: 'Mejor 3° (C/E/F/H/I)',   time: '30 jun · 8:00 PM PE',  venue: 'Estadio Azteca, Ciudad de México' },
+            { id: 'P78',  dateTime: '2026-06-30T17:00:00Z', slot1: '2° Grupo E', slot2: '2° Grupo I',             time: '30 jun · 12:00 PM PE', venue: 'AT&T Stadium, Arlington' },
+            { id: 'P77',  dateTime: '2026-06-30T21:00:00Z', slot1: '1° Grupo I', slot2: 'Mejor 3° (C/D/F/G/H)',   time: '30 jun · 4:00 PM PE',  venue: 'MetLife Stadium, Nueva Jersey' },
+            { id: 'P79',  dateTime: '2026-07-01T01:00:00Z', slot1: '1° Grupo A', slot2: 'Mejor 3° (C/E/F/H/I)',   time: '30 jun · 8:00 PM PE',  venue: 'Estadio Azteca, Ciudad de México' },
             // 1 julio
-            { id: 'P80',  slot1: '1° Grupo L', slot2: 'Mejor 3° (E/H/I/J/K)',   time: '1 jul · 11:00 AM PE',  venue: 'Mercedes-Benz Stadium, Atlanta' },
-            { id: 'P82',  slot1: '1° Grupo G', slot2: 'Mejor 3° (A/E/H/I/J)',   time: '1 jul · 3:00 PM PE',   venue: 'Lumen Field, Seattle' },
-            { id: 'P81',  slot1: '1° Grupo D', slot2: 'Mejor 3° (B/E/I)',       time: '1 jul · 7:00 PM PE',   venue: "Levi's Stadium, Santa Clara" },
+            { id: 'P80',  dateTime: '2026-07-01T16:00:00Z', slot1: '1° Grupo L', slot2: 'Mejor 3° (E/H/I/J/K)',   time: '1 jul · 11:00 AM PE',  venue: 'Mercedes-Benz Stadium, Atlanta' },
+            { id: 'P82',  dateTime: '2026-07-01T20:00:00Z', slot1: '1° Grupo G', slot2: 'Mejor 3° (A/E/H/I/J)',   time: '1 jul · 3:00 PM PE',   venue: 'Lumen Field, Seattle' },
+            { id: 'P81',  dateTime: '2026-07-02T00:00:00Z', slot1: '1° Grupo D', slot2: 'Mejor 3° (B/E/I)',       time: '1 jul · 7:00 PM PE',   venue: "Levi's Stadium, Santa Clara" },
             // 2 julio
-            { id: 'P84',  slot1: '1° Grupo H', slot2: '2° Grupo J',             time: '2 jul · 2:00 PM PE',   venue: 'SoFi Stadium, Los Ángeles' },
-            { id: 'P83',  slot1: '2° Grupo K', slot2: '2° Grupo L',             time: '2 jul · 6:00 PM PE',   venue: 'BMO Field, Toronto' },
-            { id: 'P85',  slot1: '1° Grupo B', slot2: 'Mejor 3° (E/F/G/I/J)',   time: '2 jul · 10:00 PM PE',  venue: 'BC Place, Vancouver' },
+            { id: 'P84',  dateTime: '2026-07-02T19:00:00Z', slot1: '1° Grupo H', slot2: '2° Grupo J',             time: '2 jul · 2:00 PM PE',   venue: 'SoFi Stadium, Los Ángeles' },
+            { id: 'P83',  dateTime: '2026-07-02T23:00:00Z', slot1: '2° Grupo K', slot2: '2° Grupo L',             time: '2 jul · 6:00 PM PE',   venue: 'BMO Field, Toronto' },
+            { id: 'P85',  dateTime: '2026-07-03T03:00:00Z', slot1: '1° Grupo B', slot2: 'Mejor 3° (E/F/G/I/J)',   time: '2 jul · 10:00 PM PE',  venue: 'BC Place, Vancouver' },
             // 3 julio
-            { id: 'P88',  slot1: '2° Grupo D', slot2: '2° Grupo G',             time: '3 jul · 1:00 PM PE',   venue: 'AT&T Stadium, Arlington' },
-            { id: 'P86',  slot1: '1° Grupo J', slot2: '2° Grupo H',             time: '3 jul · 5:00 PM PE',   venue: 'Hard Rock Stadium, Miami' },
-            { id: 'P87',  slot1: '1° Grupo K', slot2: 'Mejor 3° (D/E/I/J/L)',   time: '3 jul · 8:30 PM PE',   venue: 'Arrowhead Stadium, Kansas City' },
+            { id: 'P88',  dateTime: '2026-07-03T18:00:00Z', slot1: '2° Grupo D', slot2: '2° Grupo G',             time: '3 jul · 1:00 PM PE',   venue: 'AT&T Stadium, Arlington' },
+            { id: 'P86',  dateTime: '2026-07-03T22:00:00Z', slot1: '1° Grupo J', slot2: '2° Grupo H',             time: '3 jul · 5:00 PM PE',   venue: 'Hard Rock Stadium, Miami' },
+            { id: 'P87',  dateTime: '2026-07-04T01:30:00Z', slot1: '1° Grupo K', slot2: 'Mejor 3° (D/E/I/J/L)',   time: '3 jul · 8:30 PM PE',   venue: 'Arrowhead Stadium, Kansas City' },
         ]
     },
     r16: {
@@ -2004,14 +2004,14 @@ const BRACKET = {
         startDate: '4 JUL',
         accentBorder: 'rgba(0,217,255,0.55)',
         matches: [
-            { id: 'P90',  slot1: 'Gan. P73', slot2: 'Gan. P75', time: '4 jul · 12:00 PM PE', venue: 'NRG Stadium, Houston' },
-            { id: 'P89',  slot1: 'Gan. P74', slot2: 'Gan. P77', time: '4 jul · 4:00 PM PE',  venue: 'Lincoln Financial Field, Filadelfia' },
-            { id: 'P91',  slot1: 'Gan. P76', slot2: 'Gan. P78', time: '5 jul · 3:00 PM PE',  venue: 'MetLife Stadium, Nueva Jersey' },
-            { id: 'P92',  slot1: 'Gan. P79', slot2: 'Gan. P80', time: '5 jul · 7:00 PM PE',  venue: 'Estadio Azteca, Ciudad de México' },
-            { id: 'P93',  slot1: 'Gan. P83', slot2: 'Gan. P84', time: '6 jul · 2:00 PM PE',  venue: 'AT&T Stadium, Arlington' },
-            { id: 'P94',  slot1: 'Gan. P81', slot2: 'Gan. P82', time: '6 jul · 7:00 PM PE',  venue: 'Lumen Field, Seattle' },
-            { id: 'P95',  slot1: 'Gan. P86', slot2: 'Gan. P88', time: '7 jul · 11:00 AM PE', venue: 'Mercedes-Benz Stadium, Atlanta' },
-            { id: 'P96',  slot1: 'Gan. P85', slot2: 'Gan. P87', time: '7 jul · 3:00 PM PE',  venue: 'BC Place, Vancouver' },
+            { id: 'P90',  dateTime: '2026-07-04T17:00:00Z', slot1: 'Gan. P73', slot2: 'Gan. P75', time: '4 jul · 12:00 PM PE', venue: 'NRG Stadium, Houston' },
+            { id: 'P89',  dateTime: '2026-07-04T21:00:00Z', slot1: 'Gan. P74', slot2: 'Gan. P77', time: '4 jul · 4:00 PM PE',  venue: 'Lincoln Financial Field, Filadelfia' },
+            { id: 'P91',  dateTime: '2026-07-05T20:00:00Z', slot1: 'Gan. P76', slot2: 'Gan. P78', time: '5 jul · 3:00 PM PE',  venue: 'MetLife Stadium, Nueva Jersey' },
+            { id: 'P92',  dateTime: '2026-07-06T00:00:00Z', slot1: 'Gan. P79', slot2: 'Gan. P80', time: '5 jul · 7:00 PM PE',  venue: 'Estadio Azteca, Ciudad de México' },
+            { id: 'P93',  dateTime: '2026-07-06T19:00:00Z', slot1: 'Gan. P83', slot2: 'Gan. P84', time: '6 jul · 2:00 PM PE',  venue: 'AT&T Stadium, Arlington' },
+            { id: 'P94',  dateTime: '2026-07-07T00:00:00Z', slot1: 'Gan. P81', slot2: 'Gan. P82', time: '6 jul · 7:00 PM PE',  venue: 'Lumen Field, Seattle' },
+            { id: 'P95',  dateTime: '2026-07-07T16:00:00Z', slot1: 'Gan. P86', slot2: 'Gan. P88', time: '7 jul · 11:00 AM PE', venue: 'Mercedes-Benz Stadium, Atlanta' },
+            { id: 'P96',  dateTime: '2026-07-07T20:00:00Z', slot1: 'Gan. P85', slot2: 'Gan. P87', time: '7 jul · 3:00 PM PE',  venue: 'BC Place, Vancouver' },
         ]
     },
     qf: {
@@ -2022,10 +2022,10 @@ const BRACKET = {
         startDate: '9 JUL',
         accentBorder: 'rgba(0,255,136,0.5)',
         matches: [
-            { id: 'P97',  slot1: 'Gan. P89', slot2: 'Gan. P90', time: '9 jul · 3:00 PM PE',   venue: 'Gillette Stadium, Boston' },
-            { id: 'P98',  slot1: 'Gan. P93', slot2: 'Gan. P94', time: '10 jul · 2:00 PM PE',  venue: 'SoFi Stadium, Los Ángeles' },
-            { id: 'P99',  slot1: 'Gan. P91', slot2: 'Gan. P92', time: '11 jul · 4:00 PM PE',  venue: 'Hard Rock Stadium, Miami' },
-            { id: 'P100', slot1: 'Gan. P95', slot2: 'Gan. P96', time: '11 jul · 8:00 PM PE',  venue: 'Arrowhead Stadium, Kansas City' },
+            { id: 'P97',  dateTime: '2026-07-09T20:00:00Z', slot1: 'Gan. P89', slot2: 'Gan. P90', time: '9 jul · 3:00 PM PE',   venue: 'Gillette Stadium, Boston' },
+            { id: 'P98',  dateTime: '2026-07-10T19:00:00Z', slot1: 'Gan. P93', slot2: 'Gan. P94', time: '10 jul · 2:00 PM PE',  venue: 'SoFi Stadium, Los Ángeles' },
+            { id: 'P99',  dateTime: '2026-07-11T21:00:00Z', slot1: 'Gan. P91', slot2: 'Gan. P92', time: '11 jul · 4:00 PM PE',  venue: 'Hard Rock Stadium, Miami' },
+            { id: 'P100', dateTime: '2026-07-12T01:00:00Z', slot1: 'Gan. P95', slot2: 'Gan. P96', time: '11 jul · 8:00 PM PE',  venue: 'Arrowhead Stadium, Kansas City' },
         ]
     },
     sf: {
@@ -2036,8 +2036,8 @@ const BRACKET = {
         startDate: '14 JUL',
         accentBorder: 'rgba(255,51,102,0.55)',
         matches: [
-            { id: 'P101', slot1: 'Gan. P97',  slot2: 'Gan. P98',  time: '14 jul · 2:00 PM PE', venue: 'AT&T Stadium, Arlington' },
-            { id: 'P102', slot1: 'Gan. P99',  slot2: 'Gan. P100', time: '15 jul · 2:00 PM PE', venue: 'Mercedes-Benz Stadium, Atlanta' },
+            { id: 'P101', dateTime: '2026-07-14T19:00:00Z', slot1: 'Gan. P97',  slot2: 'Gan. P98',  time: '14 jul · 2:00 PM PE', venue: 'AT&T Stadium, Arlington' },
+            { id: 'P102', dateTime: '2026-07-15T19:00:00Z', slot1: 'Gan. P99',  slot2: 'Gan. P100', time: '15 jul · 2:00 PM PE', venue: 'Mercedes-Benz Stadium, Atlanta' },
         ]
     },
     third: {
@@ -2048,7 +2048,7 @@ const BRACKET = {
         startDate: '18 JUL',
         accentBorder: 'rgba(180,140,80,0.6)',
         matches: [
-            { id: 'P103', slot1: 'Perd. P101', slot2: 'Perd. P102', time: '18 jul · 4:00 PM PE', venue: 'Hard Rock Stadium, Miami' },
+            { id: 'P103', dateTime: '2026-07-18T21:00:00Z', slot1: 'Perd. P101', slot2: 'Perd. P102', time: '18 jul · 4:00 PM PE', venue: 'Hard Rock Stadium, Miami' },
         ]
     },
     final: {
@@ -2060,7 +2060,7 @@ const BRACKET = {
         accentBorder: 'rgba(255,215,0,0.7)',
         isFinal: true,
         matches: [
-            { id: 'P104', slot1: 'Gan. P101', slot2: 'Gan. P102', time: '19 jul · 2:00 PM PE', venue: 'MetLife Stadium, Nueva Jersey' },
+            { id: 'P104', dateTime: '2026-07-19T19:00:00Z', slot1: 'Gan. P101', slot2: 'Gan. P102', time: '19 jul · 2:00 PM PE', venue: 'MetLife Stadium, Nueva Jersey' },
         ]
     }
 };
@@ -2269,6 +2269,18 @@ function renderKnockoutBracket() {
 }
 
 // ── Render predicciones knockouts (tab Predicciones — 6 rondas, bloqueadas) ─
+function _isRoundOpen(key, bestThirds) {
+    switch (key) {
+        case 'r32':   return bestThirds.allDone;
+        case 'r16':   return BRACKET.r32.matches.every(m => results.find(r => r.matchId === m.id));
+        case 'qf':    return BRACKET.r16.matches.every(m => results.find(r => r.matchId === m.id));
+        case 'sf':    return BRACKET.qf.matches.every(m => results.find(r => r.matchId === m.id));
+        case 'third':
+        case 'final': return BRACKET.sf.matches.every(m => results.find(r => r.matchId === m.id));
+        default:      return false;
+    }
+}
+
 function renderKnockoutPredictions() {
     const container = document.getElementById('knockoutPredictionsSection');
     if (!container) return;
@@ -2276,30 +2288,75 @@ function renderKnockoutPredictions() {
     const groupStandings = getGroupStandings();
     const bestThirds     = computeBestThirds(groupStandings);
 
-    const ROUND_MOD = { r32: '', r16: '--r16', qf: '--qf', sf: '--sf', third: '--3rd', final: '--final' };
-    const START_LABELS = { r32: '28 JUN', r16: '5 JUL', qf: '9 JUL', sf: '14 JUL', third: '18 JUL', final: '19 JUL' };
+    const myName = document.getElementById('participantName')?.value.trim() || '';
+    const myPart = participants.find(p => p.name === myName);
+    const myPicks = myPart?.predictions || [];
+
+    const ROUND_MOD    = { r32: '', r16: '--r16', qf: '--qf', sf: '--sf', third: '--3rd', final: '--final' };
+    const START_LABELS = { r32: '28 JUN', r16: '4 JUL', qf: '9 JUL', sf: '14 JUL', third: '18 JUL', final: '19 JUL' };
+
+    let anyOpen = false;
 
     const cardsHtml = PREDICTIONS_TAB_ROUNDS.map(key => {
-        const round = BRACKET[key];
-        const mod   = ROUND_MOD[key] || '';
-        const label = START_LABELS[key] || round.startDate.toUpperCase();
+        const round  = BRACKET[key];
+        const mod    = ROUND_MOD[key] || '';
+        const label  = START_LABELS[key] || round.startDate.toUpperCase();
+        const isOpen = _isRoundOpen(key, bestThirds);
+        if (isOpen) anyOpen = true;
 
         const matchRows = round.matches.map(match => {
+            if (!isOpen) {
+                return `
+                <div class="match-prediction kp-pending">
+                    <div class="kp-match-top">
+                        <span class="match-info">${match.id} · ${match.time}</span>
+                        <span class="kp-locked-chip">🔒 Sin abrir</span>
+                    </div>
+                    <div class="match-teams-row">
+                        ${_koTeamCell(match.slot1, groupStandings, bestThirds, false)}
+                        <input type="number" class="score-input" disabled min="0" max="20" placeholder="-">
+                        <input type="number" class="score-input" disabled min="0" max="20" placeholder="-">
+                        ${_koTeamCell(match.slot2, groupStandings, bestThirds, true)}
+                    </div>
+                    <div class="match-info kp-venue">📍 ${match.venue}</div>
+                </div>`;
+            }
+
+            const existingPick = myPicks.find(p => p.matchId === match.id);
+            const hasResult    = !!results.find(r => r.matchId === match.id);
+            const kicked       = match.dateTime && new Date() >= new Date(new Date(match.dateTime) - 60000);
+            const inputLocked  = hasResult || kicked;
+
+            let statusChip;
+            if (hasResult)               statusChip = `<span class="kp-final-chip">✅ FINAL</span>`;
+            else if (inputLocked)        statusChip = `<span class="kp-locked-chip">🔒 Cerrado</span>`;
+            else if (existingPick)       statusChip = `<span class="kp-saved-chip">✅ PICK</span>`;
+            else                         statusChip = `<span class="kp-open-chip">📝 Abierto</span>`;
+
+            const v1 = existingPick?.score1 ?? '';
+            const v2 = existingPick?.score2 ?? '';
+
             return `
-            <div class="match-prediction kp-pending">
+            <div class="match-prediction${inputLocked ? ' kp-locked-match' : ''}">
                 <div class="kp-match-top">
                     <span class="match-info">${match.id} · ${match.time}</span>
-                    <span class="kp-locked-chip">🔒 Sin abrir</span>
+                    ${statusChip}
                 </div>
                 <div class="match-teams-row">
                     ${_koTeamCell(match.slot1, groupStandings, bestThirds, false)}
-                    <input type="number" class="score-input" disabled min="0" max="20" placeholder="-">
-                    <input type="number" class="score-input" disabled min="0" max="20" placeholder="-">
+                    <input id="ko-s1-${match.id}" type="number" class="score-input" ${inputLocked ? 'disabled' : ''} min="0" max="20" placeholder="-" value="${v1}">
+                    <input id="ko-s2-${match.id}" type="number" class="score-input" ${inputLocked ? 'disabled' : ''} min="0" max="20" placeholder="-" value="${v2}">
                     ${_koTeamCell(match.slot2, groupStandings, bestThirds, true)}
                 </div>
                 <div class="match-info kp-venue">📍 ${match.venue}</div>
             </div>`;
         }).join('');
+
+        const saveBtn = isOpen ? `
+        <button class="submit-btn" style="margin:16px auto 8px;display:block;width:fit-content;padding:10px 28px;"
+                onclick="submitKnockoutPredictions('${key}')">
+            💾 Guardar picks ${round.title}
+        </button>` : '';
 
         return `
         <div class="r32-section r32-section${mod}">
@@ -2318,20 +2375,87 @@ function renderKnockoutPredictions() {
             </div>
             <div class="kp-body" id="kp-body-pred_${key}">
                 ${matchRows}
+                ${saveBtn}
             </div>
         </div>`;
     }).join('');
+
+    const noticeHtml = anyOpen
+        ? `<div class="kp-locked-notice" style="border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.05);">
+            <span style="font-size:1.6rem;flex-shrink:0;line-height:1;margin-top:2px;">✅</span>
+            <div>
+                <p class="kp-lock-title" style="color:#00FF88;">Fase Eliminatoria desbloqueada</p>
+                <p class="kp-lock-body">Los clasificados están definidos. Ingresa tus predicciones. Cada ronda se abre automáticamente cuando termina la anterior.</p>
+            </div>
+           </div>`
+        : `<div class="kp-locked-notice">
+            <span style="font-size:1.6rem;flex-shrink:0;line-height:1;margin-top:2px;">🔒</span>
+            <div>
+                <p class="kp-lock-title">Predicciones Fase Eliminatoria — Sin abrir</p>
+                <p class="kp-lock-body">Se habilitarán automáticamente cuando terminen todos los partidos de grupos. Puedes ver el bracket tentativo abajo.</p>
+            </div>
+           </div>`;
 
     container.innerHTML = `
         <div class="ko-section-header" style="margin-top:36px;">
             <h3>🏆 Predicciones Fase Eliminatoria</h3>
         </div>
-        <div class="kp-locked-notice">
-            <span style="font-size:1.6rem;flex-shrink:0;line-height:1;margin-top:2px;">🔒</span>
-            <div>
-                <p class="kp-lock-title">Predicciones Fase Eliminatoria — Sin abrir</p>
-                <p class="kp-lock-body">Se habilitarán cuando se definan los 32 clasificados (~28 jun). Puedes ver el bracket tentativo basado en los standings actuales de grupos.</p>
-            </div>
-        </div>
+        ${noticeHtml}
         ${cardsHtml}`;
+}
+
+async function submitKnockoutPredictions(roundKey) {
+    const name = document.getElementById('participantName')?.value.trim() || '';
+    if (!name) { showToast('⚠️ Ingresa tu nombre primero'); return; }
+
+    const round = BRACKET[roundKey];
+    if (!round) return;
+
+    const newPicks = round.matches
+        .filter(match => {
+            const kicked = match.dateTime && new Date() >= new Date(new Date(match.dateTime) - 60000);
+            if (kicked) return false;
+            const s1 = document.getElementById(`ko-s1-${match.id}`)?.value;
+            const s2 = document.getElementById(`ko-s2-${match.id}`)?.value;
+            return s1 !== '' && s1 !== undefined && s2 !== '' && s2 !== undefined;
+        })
+        .map(match => ({
+            matchId: match.id,
+            score1: parseInt(document.getElementById(`ko-s1-${match.id}`)?.value),
+            score2: parseInt(document.getElementById(`ko-s2-${match.id}`)?.value)
+        }));
+
+    if (newPicks.length === 0) {
+        showToast('⚠️ Ingresa al menos 1 predicción antes de guardar');
+        return;
+    }
+
+    const existingParticipant = await storage.get(`participant:${name}`);
+    const existingPredictions = existingParticipant?.predictions || [];
+
+    const mergedPredictions = [...existingPredictions];
+    newPicks.forEach(np => {
+        const idx = mergedPredictions.findIndex(p => p.matchId === np.matchId);
+        if (idx >= 0) mergedPredictions[idx] = np;
+        else mergedPredictions.push(np);
+    });
+
+    const participant = {
+        ...(existingParticipant || {}),
+        name,
+        username: sessionStorage.getItem('pollaUser'),
+        predictions: mergedPredictions,
+        specialPredictions: existingParticipant?.specialPredictions || {},
+        createdAt: existingParticipant?.createdAt || Date.now(),
+        timestamp: Date.now()
+    };
+
+    await storage.set(`participant:${name}`, participant);
+
+    const idx = participants.findIndex(p => p.name === name);
+    if (idx >= 0) participants[idx] = participant;
+    else participants.push(participant);
+
+    renderKnockoutPredictions();
+    showToast(`✅ ${newPicks.length} predicción(es) guardadas para ${round.title}`);
 }
