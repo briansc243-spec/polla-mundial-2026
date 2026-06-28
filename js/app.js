@@ -1493,6 +1493,7 @@ async function submitPredictions() {
     else participants.push(participant);
 
     renderMatches();
+    renderKnockoutPredictions();
     renderMyPredictions();
     updateLeaderboard();
     updateStats();
