@@ -2340,8 +2340,8 @@ function renderKnockoutPredictions() {
 
             const existingPick = myPicks.find(p => p.matchId === match.id);
             const hasResult    = !!results.find(r => r.matchId === match.id);
-            const kicked       = match.dateTime && new Date() >= new Date(new Date(match.dateTime) - 60000);
-            const inputLocked  = hasResult || kicked;
+            const kicked       = match.dateTime && new Date() >= new Date(match.dateTime) - 60000;
+            const inputLocked  = hasResult || kicked || !!existingPick;
 
             let statusChip;
             if (hasResult)               statusChip = `<span class="kp-final-chip">✅ FINAL</span>`;
