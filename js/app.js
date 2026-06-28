@@ -1429,7 +1429,7 @@ async function submitPredictions() {
         return;
     }
 
-    // Solo guardar partidos donde el usuario ingresó ambos scores explícitamente
+    // Fase de grupos: solo partidos con ambos scores ingresados y no bloqueados
     const newPredictions = matches
         .filter(match => {
             if (isMatchLocked(match)) return false;
@@ -1442,6 +1442,22 @@ async function submitPredictions() {
             score1: parseInt(document.getElementById(`score1-${match.id}`)?.value),
             score2: parseInt(document.getElementById(`score2-${match.id}`)?.value)
         }));
+
+    // Fase eliminatoria: rondas desbloqueadas, partidos no bloqueados
+    const groupStandings = getGroupStandings();
+    const bestThirds = computeBestThirds(groupStandings);
+    for (const key of PREDICTIONS_TAB_ROUNDS) {
+        if (!_isRoundOpen(key, bestThirds)) continue;
+        for (const match of BRACKET[key].matches) {
+            const kicked = match.dateTime && new Date() >= new Date(match.dateTime) - 60000;
+            if (kicked) continue;
+            const s1 = document.getElementById(`ko-s1-${match.id}`)?.value;
+            const s2 = document.getElementById(`ko-s2-${match.id}`)?.value;
+            if (s1 !== '' && s1 !== undefined && s2 !== '' && s2 !== undefined) {
+                newPredictions.push({ matchId: match.id, score1: parseInt(s1), score2: parseInt(s2) });
+            }
+        }
+    }
 
     if (newPredictions.length === 0) {
         showToast('⚠️ Ingresa al menos 1 predicción antes de guardar');
@@ -2352,12 +2368,6 @@ function renderKnockoutPredictions() {
             </div>`;
         }).join('');
 
-        const saveBtn = isOpen ? `
-        <button class="submit-btn" style="margin:16px auto 8px;display:block;width:fit-content;padding:10px 28px;"
-                onclick="submitKnockoutPredictions('${key}')">
-            💾 Guardar picks ${round.title}
-        </button>` : '';
-
         return `
         <div class="r32-section r32-section${mod}">
             <div class="r32-header kp-toggle-header" onclick="toggleKnockoutRound('pred_${key}')" role="button">
@@ -2375,7 +2385,6 @@ function renderKnockoutPredictions() {
             </div>
             <div class="kp-body" id="kp-body-pred_${key}">
                 ${matchRows}
-                ${saveBtn}
             </div>
         </div>`;
     }).join('');
