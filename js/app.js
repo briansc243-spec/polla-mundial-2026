@@ -1188,42 +1188,73 @@ function renderMyPredictions() {
             </div>`;
     }
 
+    function pointsBadgeHtml(pred, result) {
+        if (!result || result.score1 === null || result.score2 === null) return '';
+        const isExact = pred.score1 === result.score1 && pred.score2 === result.score2;
+        const predOut = Math.sign(pred.score1 - pred.score2);
+        const resOut  = Math.sign(result.score1 - result.score2);
+        const isTend  = !isExact && predOut === resOut;
+        if (isExact)  return `<span style="background:rgba(0,255,136,0.15);color:#00FF88;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">+3 pts ✓</span>`;
+        if (isTend)   return `<span style="background:rgba(255,215,0,0.15);color:#FFD700;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">+1 pt</span>`;
+        return `<span style="background:rgba(255,51,102,0.15);color:#FF3366;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">0 pts</span>`;
+    }
+
+    function scoreBlockHtml(pred, result) {
+        if (result) return `
+            <div style="text-align:center; min-width:80px;">
+                <div style="background:rgba(0,217,255,0.12);color:#00D9FF;padding:4px 12px;border-radius:8px;font-weight:700;font-size:1rem;">${result.score1} - ${result.score2}</div>
+                <div style="font-size:0.72rem;color:#A0A8C0;margin-top:3px;">tu pick: ${pred.score1}–${pred.score2}</div>
+            </div>`;
+        return `
+            <div style="text-align:center; min-width:80px;">
+                <span style="background:rgba(0,217,255,0.08);color:#5A8FA8;padding:4px 12px;border-radius:8px;font-weight:700;font-size:1rem;border:1px dashed rgba(0,217,255,0.2);">${pred.score1} - ${pred.score2}</span>
+            </div>`;
+    }
+
+    function pickCardHtml(dateLabel, team1, team2, pred, result) {
+        const badge = pointsBadgeHtml(pred, result);
+        return `
+            <div class="pick-card">
+                <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px;">${dateLabel}</div>
+                <div class="pick-card-teams">
+                    <span class="pick-team pick-team-left">${team1}</span>
+                    ${scoreBlockHtml(pred, result)}
+                    <span class="pick-team pick-team-right">${team2}</span>
+                </div>
+                ${badge ? `<div class="pick-card-points">${badge}</div>` : ''}
+            </div>`;
+    }
+
+    // Fase de grupos
     Object.keys(grouped).sort().forEach(group => {
         html += `<h4 style="color:var(--primary); margin:16px 0 8px; font-size:0.95rem; letter-spacing:1px;">GRUPO ${group}</h4>`;
         grouped[group].forEach(({ match, pred }) => {
             const result = results.find(r => r.matchId === match.id);
-            let pointsBadge = '';
-            if (result && result.score1 !== null && result.score2 !== null) {
-                const isExact = pred.score1 === result.score1 && pred.score2 === result.score2;
-                const predOutcome = Math.sign(pred.score1 - pred.score2);
-                const resOutcome = Math.sign(result.score1 - result.score2);
-                const isTendency = !isExact && predOutcome === resOutcome;
-                if (isExact) pointsBadge = `<span style="background:rgba(0,255,136,0.15);color:#00FF88;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">+3 pts ✓</span>`;
-                else if (isTendency) pointsBadge = `<span style="background:rgba(255,215,0,0.15);color:#FFD700;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">+1 pt</span>`;
-                else pointsBadge = `<span style="background:rgba(255,51,102,0.15);color:#FF3366;padding:3px 10px;border-radius:10px;font-size:0.8rem;font-weight:700;">0 pts</span>`;
-            }
-
-            const scoreBlock = result
-                ? `<div style="text-align:center; min-width:80px;">
-                       <div style="background:rgba(0,217,255,0.12);color:#00D9FF;padding:4px 12px;border-radius:8px;font-weight:700;font-size:1rem;">${result.score1} - ${result.score2}</div>
-                       <div style="font-size:0.72rem;color:#A0A8C0;margin-top:3px;">tu pick: ${pred.score1}–${pred.score2}</div>
-                   </div>`
-                : `<div style="text-align:center; min-width:80px;">
-                       <span style="background:rgba(0,217,255,0.08);color:#5A8FA8;padding:4px 12px;border-radius:8px;font-weight:700;font-size:1rem;border:1px dashed rgba(0,217,255,0.2);">${pred.score1} - ${pred.score2}</span>
-                   </div>`;
-
-            html += `
-                <div class="pick-card">
-                    <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px;">${formatPETime(match.dateTime)}</div>
-                    <div class="pick-card-teams">
-                        <span class="pick-team pick-team-left">${match.team1}</span>
-                        ${scoreBlock}
-                        <span class="pick-team pick-team-right">${match.team2}</span>
-                    </div>
-                    ${pointsBadge ? `<div class="pick-card-points">${pointsBadge}</div>` : ''}
-                </div>`;
+            html += pickCardHtml(formatPETime(match.dateTime), match.team1, match.team2, pred, result);
         });
     });
+
+    // Fase eliminatoria
+    const groupStandingsMP = getGroupStandings();
+    const bestThirdsMP     = computeBestThirds(groupStandingsMP);
+
+    for (const key of PREDICTIONS_TAB_ROUNDS) {
+        const round = BRACKET[key];
+        const roundPicks = round.matches
+            .map(m => ({ match: m, pred: me.predictions.find(p => p.matchId === m.id) }))
+            .filter(({ pred }) => pred);
+        if (roundPicks.length === 0) continue;
+
+        html += `<h4 style="color:var(--primary); margin:20px 0 8px; font-size:0.95rem; letter-spacing:1px;">${round.emoji} ${round.title.toUpperCase()}</h4>`;
+        roundPicks.forEach(({ match, pred }) => {
+            const result = results.find(r => r.matchId === match.id);
+            const r1 = resolveSlot(match.slot1, groupStandingsMP, bestThirdsMP);
+            const r2 = resolveSlot(match.slot2, groupStandingsMP, bestThirdsMP);
+            const name1 = (r1.team && r1.team !== match.slot1) ? r1.team : match.slot1;
+            const name2 = (r2.team && r2.team !== match.slot2) ? r2.team : match.slot2;
+            html += pickCardHtml(match.time, name1, name2, pred, result);
+        });
+    }
 
     container.innerHTML = html;
 }
