@@ -627,38 +627,39 @@ let liveScores = {};
 let _livePollingInterval = null;
 let _actualBracketTeams = {}; // { 'P73': {team1, team2}, ... } — from ESPN scoreboard
 
+const ESPN_TO_ES = {
+    'Mexico': 'México', 'South Africa': 'Sudáfrica',
+    'South Korea': 'Corea del Sur', 'Czechia': 'Chequia',
+    'Canada': 'Canadá', 'Bosnia-Herzegovina': 'Bosnia y Herzegovina',
+    'Switzerland': 'Suiza', 'Qatar': 'Qatar',
+    'United States': 'USA', 'Paraguay': 'Paraguay',
+    'Australia': 'Australia', 'Sweden': 'Suecia',
+    'Germany': 'Alemania', 'Curaçao': 'Curazao',
+    'Ivory Coast': 'Costa de Marfil', 'Ecuador': 'Ecuador',
+    'Netherlands': 'Países Bajos', 'Japan': 'Japón',
+    'New Zealand': 'Nueva Zelanda', 'Tunisia': 'Túnez',
+    'Belgium': 'Bélgica', 'Egypt': 'Egipto',
+    'Iran': 'Irán', 'Saudi Arabia': 'Arabia Saudita',
+    'Spain': 'España', 'Cape Verde': 'Cabo Verde',
+    'Uruguay': 'Uruguay', 'Haiti': 'Haití',
+    'France': 'Francia', 'Iraq': 'Iraq',
+    'Senegal': 'Senegal', 'Norway': 'Noruega',
+    'Argentina': 'Argentina', 'Algeria': 'Algeria',
+    'Austria': 'Austria', 'Jordan': 'Jordania',
+    'Uzbekistan': 'Uzbekistán', 'Panama': 'Panamá',
+    'Portugal': 'Portugal', 'Congo DR': 'Congo DR',
+    'England': 'Inglaterra', 'Croatia': 'Croacia',
+    'Ghana': 'Ghana',
+    'Morocco': 'Marruecos', 'Colombia': 'Colombia',
+    'Brazil': 'Brasil', 'Türkiye': 'Turquía',
+    'Scotland': 'Escocia',
+};
+
 function stripFlag(name) {
     return name.replace(/^[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]+/, '').trim();
 }
 
 async function fetchLiveScores() {
-    const ESPN_TO_ES = {
-        'Mexico': 'México', 'South Africa': 'Sudáfrica',
-        'South Korea': 'Corea del Sur', 'Czechia': 'Chequia',
-        'Canada': 'Canadá', 'Bosnia-Herzegovina': 'Bosnia y Herzegovina',
-        'Switzerland': 'Suiza', 'Qatar': 'Qatar',
-        'United States': 'USA', 'Paraguay': 'Paraguay',
-        'Australia': 'Australia', 'Sweden': 'Suecia',
-        'Germany': 'Alemania', 'Curaçao': 'Curazao',
-        'Ivory Coast': 'Costa de Marfil', 'Ecuador': 'Ecuador',
-        'Netherlands': 'Países Bajos', 'Japan': 'Japón',
-        'New Zealand': 'Nueva Zelanda', 'Tunisia': 'Túnez',
-        'Belgium': 'Bélgica', 'Egypt': 'Egipto',
-        'Iran': 'Irán', 'Saudi Arabia': 'Arabia Saudita',
-        'Spain': 'España', 'Cape Verde': 'Cabo Verde',
-        'Uruguay': 'Uruguay', 'Haiti': 'Haití',
-        'France': 'Francia', 'Iraq': 'Iraq',
-        'Senegal': 'Senegal', 'Norway': 'Noruega',
-        'Argentina': 'Argentina', 'Algeria': 'Algeria',
-        'Austria': 'Austria', 'Jordan': 'Jordania',
-        'Uzbekistan': 'Uzbekistán', 'Panama': 'Panamá',
-        'Portugal': 'Portugal', 'Congo DR': 'Congo DR',
-        'England': 'Inglaterra', 'Croatia': 'Croacia',
-        'Ghana': 'Ghana', 'Panama': 'Panamá',
-        'Morocco': 'Marruecos', 'Colombia': 'Colombia',
-        'Brazil': 'Brasil', 'Türkiye': 'Turquía',
-        'Scotland': 'Escocia',
-    };
 
     try {
         const res = await fetch(
@@ -2289,9 +2290,17 @@ async function fetchActualBracketTeams() {
             if (bracketMatch && comp.competitors.length >= 2) {
                 const h = comp.competitors[0].team.displayName;
                 const a = comp.competitors[1].team.displayName;
+                const nameEs1 = ESPN_TO_ES[h] || h;
+                const nameEs2 = ESPN_TO_ES[a] || a;
+                // Buscar nombre completo con emoji de bandera desde matches
+                const findWithFlag = n => {
+                    const found = [...matches].find(m => stripFlag(m.team1) === n || stripFlag(m.team2) === n);
+                    if (!found) return n;
+                    return stripFlag(found.team1) === n ? found.team1 : found.team2;
+                };
                 _actualBracketTeams[bracketMatch.id] = {
-                    team1: ESPN_TO_ES[h] || h,
-                    team2: ESPN_TO_ES[a] || a,
+                    team1: findWithFlag(nameEs1),
+                    team2: findWithFlag(nameEs2),
                 };
             }
         }
