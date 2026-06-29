@@ -2536,8 +2536,8 @@ function renderKnockoutPredictions() {
         ? `<div class="kp-locked-notice" style="border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.05);">
             <span style="font-size:1.6rem;flex-shrink:0;line-height:1;margin-top:2px;">✅</span>
             <div>
-                <p class="kp-lock-title" style="color:#00FF88;">Fase Eliminatoria desbloqueada</p>
-                <p class="kp-lock-body">Los clasificados están definidos. Ingresa tus predicciones. Cada ronda se abre automáticamente cuando termina la anterior.</p>
+                <p class="kp-lock-title" style="color:#00FF88;">Predicciones 16avos abiertas</p>
+                <p class="kp-lock-body">Cada partido se cierra 1 minuto antes del inicio. Guarda tus picks con el botón al final del listado.</p>
             </div>
            </div>`
         : `<div class="kp-locked-notice">
