@@ -625,6 +625,7 @@ let participants = [];
 let results = [];
 let liveScores = {};
 let _livePollingInterval = null;
+let _actualBracketTeams = {}; // { 'P73': {team1, team2}, ... } — from ESPN scoreboard
 
 function stripFlag(name) {
     return name.replace(/^[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]+/, '').trim();
@@ -776,15 +777,7 @@ function renderLiveBar() {
     const gsLB = getGroupStandings();
     const btLB = computeBestThirds(gsLB);
     const knockoutLB = PREDICTIONS_TAB_ROUNDS.flatMap(key =>
-        BRACKET[key].matches.map(m => {
-            const r1 = resolveSlot(m.slot1, gsLB, btLB);
-            const r2 = resolveSlot(m.slot2, gsLB, btLB);
-            return {
-                ...m,
-                team1: (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1,
-                team2: (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2,
-            };
-        })
+        BRACKET[key].matches.map(m => ({ ...m, ...getActualTeams(m, gsLB, btLB) }))
     );
 
     const todayMatches = [...matches, ...knockoutLB]
@@ -1117,10 +1110,11 @@ async function init() {
     try {
         matches = defaultMatches;
 
-        // Cargar participantes y resultados en paralelo — 2 queries simultáneas
+        // Cargar participantes, resultados y equipos reales en paralelo
         const [rawParticipants, rawResults] = await Promise.all([
             storage.getAll('participant:'),
-            storage.getAll('result:')
+            storage.getAll('result:'),
+            fetchActualBracketTeams(),
         ]);
 
         // Deduplicar participantes y excluir admin
@@ -1263,10 +1257,7 @@ function renderMyPredictions() {
         html += `<h4 style="color:var(--primary); margin:20px 0 8px; font-size:0.95rem; letter-spacing:1px;">${round.emoji} ${round.title.toUpperCase()}</h4>`;
         roundPicks.forEach(({ match, pred }) => {
             const result = results.find(r => r.matchId === match.id);
-            const r1 = resolveSlot(match.slot1, groupStandingsMP, bestThirdsMP);
-            const r2 = resolveSlot(match.slot2, groupStandingsMP, bestThirdsMP);
-            const name1 = (r1.team && r1.team !== match.slot1) ? r1.team : match.slot1;
-            const name2 = (r2.team && r2.team !== match.slot2) ? r2.team : match.slot2;
+            const { team1: name1, team2: name2 } = getActualTeams(match, groupStandingsMP, bestThirdsMP);
             html += pickCardHtml(match.time, name1, name2, pred, result);
         });
     }
@@ -1505,10 +1496,7 @@ function renderResults() {
 
         html += `<h4 style="color:#00D9FF;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;margin:20px 0 8px;letter-spacing:1px;">${round.emoji} ${round.title}</h4>`;
         html += roundMatches.map(m => {
-            const r1 = resolveSlot(m.slot1, groupStandings, bestThirds);
-            const r2 = resolveSlot(m.slot2, groupStandings, bestThirds);
-            const name1 = (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1;
-            const name2 = (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2;
+            const { team1: name1, team2: name2 } = getActualTeams(m, groupStandings, bestThirds);
             return matchRow(m.id, name1, name2);
         }).join('');
     }
@@ -1812,15 +1800,7 @@ function renderAllPicks() {
 
     // Incluir partidos de eliminatoria con nombres de equipo resueltos
     const knockoutMatchesAP = PREDICTIONS_TAB_ROUNDS.flatMap(key =>
-        BRACKET[key].matches.map(m => {
-            const r1 = resolveSlot(m.slot1, groupStandingsAP, bestThirdsAP);
-            const r2 = resolveSlot(m.slot2, groupStandingsAP, bestThirdsAP);
-            return {
-                ...m,
-                team1: (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1,
-                team2: (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2,
-            };
-        })
+        BRACKET[key].matches.map(m => ({ ...m, ...getActualTeams(m, groupStandingsAP, bestThirdsAP) }))
     );
 
     const eligible = [...matches, ...knockoutMatchesAP]
@@ -2098,16 +2078,11 @@ function showTodayMatches() {
     const groupStandingsTM = getGroupStandings();
     const bestThirdsTM     = computeBestThirds(groupStandingsTM);
     const knockoutFlat = PREDICTIONS_TAB_ROUNDS.flatMap(key =>
-        BRACKET[key].matches.map(m => {
-            const r1 = resolveSlot(m.slot1, groupStandingsTM, bestThirdsTM);
-            const r2 = resolveSlot(m.slot2, groupStandingsTM, bestThirdsTM);
-            return {
-                ...m,
-                team1: (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1,
-                team2: (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2,
-                roundLabel: BRACKET[key].title,
-            };
-        })
+        BRACKET[key].matches.map(m => ({
+            ...m,
+            ...getActualTeams(m, groupStandingsTM, bestThirdsTM),
+            roundLabel: BRACKET[key].title,
+        }))
     );
 
     const todayMatches = [...matches, ...knockoutFlat].filter(m => {
@@ -2297,6 +2272,45 @@ const GROUPS_TAB_ROUNDS     = ['r32', 'r16', 'qf', 'sf', 'third', 'final'];
 const PREDICTIONS_TAB_ROUNDS = ['r32', 'r16', 'qf', 'sf', 'third', 'final'];
 
 // Calcula standings de cada grupo desde results[] globales
+// Obtiene los equipos reales de los partidos eliminatorios desde ESPN
+async function fetchActualBracketTeams() {
+    try {
+        const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260628-20260719');
+        const data = await res.json();
+        const allBracketMatches = Object.values(BRACKET).flatMap(r => r.matches);
+        for (const ev of data.events || []) {
+            const comp = ev.competitions[0];
+            const espnDate = new Date(comp.date);
+            const bracketMatch = allBracketMatches.find(m => {
+                if (!m.dateTime) return false;
+                return Math.abs(new Date(m.dateTime).getTime() - espnDate.getTime()) < 20 * 60 * 1000;
+            });
+            if (bracketMatch && comp.competitors.length >= 2) {
+                const h = comp.competitors[0].team.displayName;
+                const a = comp.competitors[1].team.displayName;
+                _actualBracketTeams[bracketMatch.id] = {
+                    team1: ESPN_TO_ES[h] || h,
+                    team2: ESPN_TO_ES[a] || a,
+                };
+            }
+        }
+    } catch (e) {
+        console.error('fetchActualBracketTeams error:', e);
+    }
+}
+
+// Helper: resuelve equipos de un partido del bracket usando ESPN si disponible
+function getActualTeams(m, gs, bt) {
+    const actual = _actualBracketTeams[m.id];
+    if (actual) return actual;
+    const r1 = resolveSlot(m.slot1, gs, bt);
+    const r2 = resolveSlot(m.slot2, gs, bt);
+    return {
+        team1: (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1,
+        team2: (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2,
+    };
+}
+
 function getGroupStandings() {
     const groupLetters = [...new Set(
         matches.filter(m => m.group && m.group.length === 1).map(m => m.group)
@@ -2416,6 +2430,16 @@ function toggleKnockoutRound(key) {
 }
 
 // Helpers para render bracket/predicciones
+function _koCell(match, useSlot2, gs, bt, alignRight) {
+    const actual = _actualBracketTeams[match.id];
+    if (actual) {
+        const team = useSlot2 ? actual.team2 : actual.team1;
+        const align = alignRight ? ' kp-right' : '';
+        return `<div class="kp-team-cell${align}"><span class="kp-slot-tag" style="color:#00FF88;">✓ CLASIF.</span><span class="kp-team-display">${team}</span></div>`;
+    }
+    return _koTeamCell(useSlot2 ? match.slot2 : match.slot1, gs, bt, alignRight);
+}
+
 function _koTeamCell(slot, groupStandings, bestThirds, alignRight) {
     const r = resolveSlot(slot, groupStandings, bestThirds);
     const shortSlot = slot.replace('Mejor 3° ', '3° ');
@@ -2451,17 +2475,22 @@ function renderKnockoutBracket() {
         const label = START_LABELS[key] || round.startDate.toUpperCase();
 
         const matchRows = round.matches.map(match => {
-            const s1 = resolveSlot(match.slot1, groupStandings, bestThirds);
-            const s2 = resolveSlot(match.slot2, groupStandings, bestThirds);
+            const actual = _actualBracketTeams[match.id];
+            const cell1 = actual
+                ? `<div class="kp-team-cell"><span class="kp-slot-tag" style="color:#00FF88;">✓ CLASIF.</span><span class="kp-team-display">${actual.team1}</span></div>`
+                : _koTeamCell(match.slot1, groupStandings, bestThirds, false);
+            const cell2 = actual
+                ? `<div class="kp-team-cell kp-right"><span class="kp-slot-tag" style="color:#00FF88;">✓ CLASIF.</span><span class="kp-team-display">${actual.team2}</span></div>`
+                : _koTeamCell(match.slot2, groupStandings, bestThirds, true);
             return `
             <div class="match-prediction kp-pending" style="pointer-events:none;">
                 <div class="kp-match-top">
                     <span class="match-info">${match.id} · ${match.time}</span>
                 </div>
                 <div class="match-teams-row">
-                    ${_koTeamCell(match.slot1, groupStandings, bestThirds, false)}
+                    ${cell1}
                     <div></div><div></div>
-                    ${_koTeamCell(match.slot2, groupStandings, bestThirds, true)}
+                    ${cell2}
                 </div>
                 <div class="match-info kp-venue">📍 ${match.venue}</div>
             </div>`;
@@ -2541,10 +2570,10 @@ function renderKnockoutPredictions() {
                         <span class="kp-locked-chip">🔒 Sin abrir</span>
                     </div>
                     <div class="match-teams-row">
-                        ${_koTeamCell(match.slot1, groupStandings, bestThirds, false)}
+                        ${_koCell(match, false, groupStandings, bestThirds, false)}
                         <input type="number" class="score-input" disabled min="0" max="20" placeholder="-">
                         <input type="number" class="score-input" disabled min="0" max="20" placeholder="-">
-                        ${_koTeamCell(match.slot2, groupStandings, bestThirds, true)}
+                        ${_koCell(match, true, groupStandings, bestThirds, true)}
                     </div>
                     <div class="match-info kp-venue">📍 ${match.venue}</div>
                 </div>`;
@@ -2578,10 +2607,10 @@ function renderKnockoutPredictions() {
                     ${statusChip}${resultChip}
                 </div>
                 <div class="match-teams-row">
-                    ${_koTeamCell(match.slot1, groupStandings, bestThirds, false)}
+                    ${_koCell(match, false, groupStandings, bestThirds, false)}
                     <input id="ko-s1-${match.id}" type="number" class="score-input" ${inputLocked ? 'disabled' : ''} min="0" max="20" placeholder="-" value="${v1}">
                     <input id="ko-s2-${match.id}" type="number" class="score-input" ${inputLocked ? 'disabled' : ''} min="0" max="20" placeholder="-" value="${v2}">
-                    ${_koTeamCell(match.slot2, groupStandings, bestThirds, true)}
+                    ${_koCell(match, true, groupStandings, bestThirds, true)}
                 </div>
                 <div class="match-info kp-venue">📍 ${match.venue}</div>
             </div>`;
