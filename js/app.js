@@ -734,7 +734,7 @@ async function fetchLiveScores() {
 
                 // Fase eliminatoria: busca por fecha/hora del partido (±20 min de tolerancia)
                 if (!internalMatch) {
-                    const espnKickoff = comp.date ? new Date(comp.date) : null;
+                    const espnKickoff = comp.date ? new Date(comp.date.replace(/T(\d{2}:\d{2})Z$/, 'T$1:00Z')) : null;
                     if (espnKickoff) {
                         for (const rKey of GROUPS_TAB_ROUNDS) {
                             const koMatch = BRACKET[rKey].matches.find(m => {
@@ -2280,7 +2280,8 @@ async function fetchActualBracketTeams() {
         const allBracketMatches = Object.values(BRACKET).flatMap(r => r.matches);
         for (const ev of data.events || []) {
             const comp = ev.competitions[0];
-            const espnDate = new Date(comp.date);
+            // ESPN omite segundos en formato: "2026-07-01T20:00Z" → normalizar a ISO válido
+            const espnDate = new Date(comp.date.replace(/T(\d{2}:\d{2})Z$/, 'T$1:00Z'));
             const bracketMatch = allBracketMatches.find(m => {
                 if (!m.dateTime) return false;
                 return Math.abs(new Date(m.dateTime).getTime() - espnDate.getTime()) < 20 * 60 * 1000;
