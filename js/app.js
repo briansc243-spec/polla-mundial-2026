@@ -2602,10 +2602,18 @@ function renderKnockoutPredictions() {
             else if (kicked)       statusChip = `<span class="kp-locked-chip">🔒 Cerrado</span>`;
             else                   statusChip = `<span class="match-status-open${koUrgent ? ' match-closing-urgent' : ''}">⏰ ${getTimeUntilLock(match)}</span>`;
 
-            // Chip de resultado (igual que liveBadge en grupos) — aparece junto al de estado
-            const resultChip = savedResult
-                ? `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`
-                : '';
+            // Chip de resultado / en vivo (igual que liveBadge en grupos)
+            const koActual = _actualBracketTeams[match.id];
+            const koLiveKey = koActual ? `${stripFlag(koActual.team1)}|${stripFlag(koActual.team2)}` : null;
+            const koLive = koLiveKey ? liveScores[koLiveKey] : null;
+            let resultChip = '';
+            if (savedResult) {
+                resultChip = `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`;
+            } else if (koLive && koLive.status === 'IN_PLAY') {
+                resultChip = `<span style="background:rgba(0,255,136,0.15);border:1px solid #00FF88;color:#00FF88;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;animation:pulse 1.5s infinite;">⚽ ${koLive.home_score}-${koLive.away_score} · ${koLive.minute || ''}' EN VIVO</span>`;
+            } else if (koLive && koLive.status === 'PAUSED') {
+                resultChip = `<span style="background:rgba(255,215,0,0.15);border:1px solid #FFD700;color:#FFD700;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">⏸ ${koLive.home_score}-${koLive.away_score} · DESCANSO</span>`;
+            }
 
             const v1 = existingPick?.score1 ?? '';
             const v2 = existingPick?.score2 ?? '';
