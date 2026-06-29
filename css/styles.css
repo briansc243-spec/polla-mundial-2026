@@ -1581,7 +1581,7 @@ input:focus, select:focus {
     transition: max-height 0.4s ease, opacity 0.28s ease, padding-top 0.3s ease;
 }
 .kp-body.open {
-    max-height: 2400px;
+    max-height: 5000px;
     opacity: 1;
     padding-top: 18px;
 }
