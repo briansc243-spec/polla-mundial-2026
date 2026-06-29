@@ -2005,7 +2005,23 @@ function showTodayMatches() {
     const todayStr = toDateStr(nowPE);
     const tomorrowStr = toDateStr(tomorrowPE);
 
-    const todayMatches = matches.filter(m => {
+    // Incluir también partidos de eliminatoria con nombres resueltos
+    const groupStandingsTM = getGroupStandings();
+    const bestThirdsTM     = computeBestThirds(groupStandingsTM);
+    const knockoutFlat = PREDICTIONS_TAB_ROUNDS.flatMap(key =>
+        BRACKET[key].matches.map(m => {
+            const r1 = resolveSlot(m.slot1, groupStandingsTM, bestThirdsTM);
+            const r2 = resolveSlot(m.slot2, groupStandingsTM, bestThirdsTM);
+            return {
+                ...m,
+                team1: (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1,
+                team2: (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2,
+                roundLabel: BRACKET[key].title,
+            };
+        })
+    );
+
+    const todayMatches = [...matches, ...knockoutFlat].filter(m => {
         if (!m.dateTime) return false;
         const matchPE = new Date(new Date(m.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' }));
         const matchStr = toDateStr(matchPE);
@@ -2060,7 +2076,7 @@ function showTodayMatches() {
         return `${separator}
             <div style="background:rgba(255,255,255,0.04); border:1px solid ${hasPick ? 'rgba(0,255,136,0.15)' : 'rgba(255,255,255,0.07)'}; border-radius:12px; padding:14px 16px; margin-bottom:10px; opacity:${hasPick ? '0.75' : '1'};">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="color:#A0A8C0; font-size:0.8rem;">🕐 ${matchTimePE} PE · Grupo ${match.group}</span>
+                    <span style="color:#A0A8C0; font-size:0.8rem;">🕐 ${matchTimePE} PE · ${match.group ? `Grupo ${match.group}` : (match.roundLabel || '')}</span>
                     ${statusBadge}
                 </div>
                 <div style="display:flex; align-items:center; justify-content:center; gap:12px; font-size:0.95rem; font-weight:600; color:#fff;">
