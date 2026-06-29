@@ -772,7 +772,22 @@ function renderLiveBar() {
     const now = new Date();
     const todayPE = now.toLocaleDateString('es-PE', { timeZone: 'America/Lima' });
 
-    const todayMatches = matches
+    // Incluir partidos de eliminatoria con nombres resueltos
+    const gsLB = getGroupStandings();
+    const btLB = computeBestThirds(gsLB);
+    const knockoutLB = PREDICTIONS_TAB_ROUNDS.flatMap(key =>
+        BRACKET[key].matches.map(m => {
+            const r1 = resolveSlot(m.slot1, gsLB, btLB);
+            const r2 = resolveSlot(m.slot2, gsLB, btLB);
+            return {
+                ...m,
+                team1: (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1,
+                team2: (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2,
+            };
+        })
+    );
+
+    const todayMatches = [...matches, ...knockoutLB]
         .filter(m => m.dateTime && new Date(m.dateTime).toLocaleDateString('es-PE', { timeZone: 'America/Lima' }) === todayPE)
         .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
