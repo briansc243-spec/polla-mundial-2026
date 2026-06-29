@@ -716,8 +716,9 @@ async function fetchLiveScores() {
             }
 
             // Auto-guardar resultados finales con patrón individual (result:matchId)
-            // Doble guard: ESPN STATUS_FULL_TIME + kickoff ya pasó (ESPN a veces pre-carga STATUS_FULL_TIME en partidos futuros)
-            if (statusType.name === 'STATUS_FULL_TIME') {
+            // Doble guard: ESPN STATUS_FULL_TIME/FINAL_AET/FINAL_PEN + kickoff ya pasó (ESPN a veces pre-carga STATUS_FULL_TIME en partidos futuros)
+            const FINISHED_STATUSES = ['STATUS_FULL_TIME', 'STATUS_FINAL_AET', 'STATUS_FINAL_PEN'];
+            if (FINISHED_STATUSES.includes(statusType.name)) {
                 const now = new Date();
 
                 // Fase de grupos: busca por nombres de equipo
