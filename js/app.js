@@ -2299,10 +2299,31 @@ async function fetchActualBracketTeams() {
                     if (!found) return n;
                     return stripFlag(found.team1) === n ? found.team1 : found.team2;
                 };
-                _actualBracketTeams[bracketMatch.id] = {
+                const entry = {
                     team1: findWithFlag(nameEs1),
                     team2: findWithFlag(nameEs2),
+                    winner: null,
                 };
+                // Determinar ganador para mostrar ✓ CLASIF. en R16+
+                const FINAL_STATUSES = ['STATUS_FULL_TIME', 'STATUS_FINAL_AET', 'STATUS_FINAL_PEN'];
+                if (FINAL_STATUSES.includes(comp.status?.type?.name)) {
+                    const hScore = parseInt(comp.competitors[0].score) || 0;
+                    const aScore = parseInt(comp.competitors[1].score) || 0;
+                    if (hScore > aScore) {
+                        entry.winner = 'team1';
+                    } else if (aScore > hScore) {
+                        entry.winner = 'team2';
+                    } else {
+                        // Empate en 90'/120' → buscar ganador de penales en notes
+                        const penNote = (comp.notes || []).find(n => n.text && n.text.toLowerCase().includes('advance'));
+                        if (penNote) {
+                            const advancingEn = penNote.text.split(' advance')[0].trim();
+                            const advancingEs = ESPN_TO_ES[advancingEn] || advancingEn;
+                            entry.winner = (advancingEs === nameEs2) ? 'team2' : 'team1';
+                        }
+                    }
+                }
+                _actualBracketTeams[bracketMatch.id] = entry;
             }
         }
     } catch (e) {
@@ -2427,7 +2448,32 @@ function resolveSlot(slot, groupStandings, bestThirds) {
         }
     }
 
-    // "Gan. P73" / "Perd. P101" — pasa como texto
+    // "Gan. P73" etc. — ganador de un partido eliminatorio
+    const ganMatch = slot.match(/^Gan\.\s*(P\d+)$/);
+    if (ganMatch) {
+        const srcId = ganMatch[1];
+        const srcData = _actualBracketTeams[srcId];
+        const srcResult = results.find(r => r.matchId === srcId);
+        if (srcData && srcResult && srcData.winner) {
+            const winnerTeam = srcData.winner === 'team1' ? srcData.team1 : srcData.team2;
+            return { team: winnerTeam, badge: '<span class="ko-badge-clasif">✓ CLASIF.</span>' };
+        }
+        return { team: slot, badge: '' };
+    }
+
+    // "Perd. P101" etc. — perdedor de un partido eliminatorio (tercer puesto)
+    const perdMatch = slot.match(/^Perd\.\s*(P\d+)$/);
+    if (perdMatch) {
+        const srcId = perdMatch[1];
+        const srcData = _actualBracketTeams[srcId];
+        const srcResult = results.find(r => r.matchId === srcId);
+        if (srcData && srcResult && srcData.winner) {
+            const loserTeam = srcData.winner === 'team1' ? srcData.team2 : srcData.team1;
+            return { team: loserTeam, badge: '<span class="ko-badge-clasif">✓ CLASIF.</span>' };
+        }
+        return { team: slot, badge: '' };
+    }
+
     return { team: slot, badge: '' };
 }
 
