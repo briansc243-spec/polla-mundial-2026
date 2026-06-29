@@ -1391,33 +1391,57 @@ function renderResults() {
     const saveBtn = document.getElementById('saveResultsBtn');
     if (saveBtn) saveBtn.style.display = isAdmin ? 'block' : 'none';
 
-    container.innerHTML = matches.map(match => {
-        const result = results.find(r => r.matchId === match.id);
+    const groupStandings = getGroupStandings();
+    const bestThirds = computeBestThirds(groupStandings);
+
+    function matchRow(id, name1, name2) {
+        const result = results.find(r => r.matchId === id);
         const score1 = result ? result.score1 : '';
         const score2 = result ? result.score2 : '';
-
         if (isAdmin) {
             return `
                 <div class="match-prediction">
-                    <div class="team-name">${match.team1}</div>
-                    <input type="number" class="score-input" id="result1-${match.id}" min="0" max="20" value="${score1}" placeholder="?">
-                    <input type="number" class="score-input" id="result2-${match.id}" min="0" max="20" value="${score2}" placeholder="?">
-                    <div class="team-name">${match.team2}</div>
-                </div>
-            `;
+                    <div class="team-name">${name1}</div>
+                    <input type="number" class="score-input" id="result1-${id}" min="0" max="20" value="${score1}" placeholder="?">
+                    <input type="number" class="score-input" id="result2-${id}" min="0" max="20" value="${score2}" placeholder="?">
+                    <div class="team-name">${name2}</div>
+                </div>`;
         }
-
         const s1 = score1 !== '' ? score1 : '-';
         const s2 = score2 !== '' ? score2 : '-';
         return `
             <div class="match-prediction">
-                <div class="team-name">${match.team1}</div>
+                <div class="team-name">${name1}</div>
                 <span class="score-display">${s1}</span>
                 <span class="score-display">${s2}</span>
-                <div class="team-name">${match.team2}</div>
-            </div>
-        `;
-    }).join('');
+                <div class="team-name">${name2}</div>
+            </div>`;
+    }
+
+    // Fase de grupos
+    let html = matches.map(m => matchRow(m.id, m.team1, m.team2)).join('');
+
+    // Fase eliminatoria — mostrar rondas que ya comenzaron o empiezan en las próximas 48h
+    const now = new Date();
+    for (const key of GROUPS_TAB_ROUNDS) {
+        const round = BRACKET[key];
+        const roundMatches = round.matches.filter(m => {
+            const kickoff = new Date(m.dateTime);
+            return (kickoff - now) / 3600000 <= 48;
+        });
+        if (roundMatches.length === 0) continue;
+
+        html += `<h4 style="color:#00D9FF;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;margin:20px 0 8px;letter-spacing:1px;">${round.emoji} ${round.title}</h4>`;
+        html += roundMatches.map(m => {
+            const r1 = resolveSlot(m.slot1, groupStandings, bestThirds);
+            const r2 = resolveSlot(m.slot2, groupStandings, bestThirds);
+            const name1 = (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1;
+            const name2 = (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2;
+            return matchRow(m.id, name1, name2);
+        }).join('');
+    }
+
+    container.innerHTML = html;
 }
 
 // Guardar predicciones
@@ -1529,6 +1553,18 @@ async function saveResults() {
         return { match, score1, score2 };
     }).filter(r => r.score1 !== null && r.score2 !== null);
 
+    // También guardar resultados de fase eliminatoria
+    for (const key of GROUPS_TAB_ROUNDS) {
+        for (const match of BRACKET[key].matches) {
+            const s1Input = document.getElementById(`result1-${match.id}`);
+            const s2Input = document.getElementById(`result2-${match.id}`);
+            if (!s1Input || !s2Input) continue;
+            const score1 = s1Input.value !== '' ? parseInt(s1Input.value) : null;
+            const score2 = s2Input.value !== '' ? parseInt(s2Input.value) : null;
+            if (score1 !== null && score2 !== null) inputResults.push({ match, score1, score2 });
+        }
+    }
+
     if (inputResults.length === 0) {
         alert('No hay resultados para guardar.');
         return;
@@ -1629,7 +1665,23 @@ function renderAllPicks() {
 
     try {
     const now = new Date();
-    const eligible = matches
+    const groupStandingsAP = getGroupStandings();
+    const bestThirdsAP = computeBestThirds(groupStandingsAP);
+
+    // Incluir partidos de eliminatoria con nombres de equipo resueltos
+    const knockoutMatchesAP = PREDICTIONS_TAB_ROUNDS.flatMap(key =>
+        BRACKET[key].matches.map(m => {
+            const r1 = resolveSlot(m.slot1, groupStandingsAP, bestThirdsAP);
+            const r2 = resolveSlot(m.slot2, groupStandingsAP, bestThirdsAP);
+            return {
+                ...m,
+                team1: (r1.team && r1.team !== m.slot1) ? r1.team : m.slot1,
+                team2: (r2.team && r2.team !== m.slot2) ? r2.team : m.slot2,
+            };
+        })
+    );
+
+    const eligible = [...matches, ...knockoutMatchesAP]
         .filter(m => new Date(m.dateTime).getTime() < now.getTime())
         .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
