@@ -1743,7 +1743,8 @@ async function fetchTopScorers() {
         if (!cat) return [];
         const top10 = cat.leaders.slice(0, 10);
         const scorers = await Promise.all(top10.map(async (l) => {
-            const ar = await fetch(l.athlete.$ref);
+            const athleteUrl = l.athlete.$ref.replace(/^http:\/\//, 'https://');
+            const ar = await fetch(athleteUrl);
             const athlete = await ar.json();
             const flagUrl = athlete.flag?.href || '';
             const m = flagUrl.match(/\/([a-z]{2,3})\.png$/i);
