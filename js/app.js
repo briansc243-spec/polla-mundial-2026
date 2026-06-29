@@ -2392,12 +2392,12 @@ function renderKnockoutPredictions() {
             }
 
             const existingPick = myPicks.find(p => p.matchId === match.id);
-            const hasResult    = !!results.find(r => r.matchId === match.id);
+            const savedResult  = results.find(r => r.matchId === match.id);
             const kicked       = match.dateTime && new Date() >= new Date(match.dateTime) - 60000;
-            const inputLocked  = hasResult || kicked || !!existingPick;
+            const inputLocked  = !!savedResult || kicked || !!existingPick;
 
             let statusChip;
-            if (hasResult)         statusChip = `<span class="kp-final-chip">✅ FINAL</span>`;
+            if (savedResult)       statusChip = `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`;
             else if (kicked)       statusChip = `<span class="kp-locked-chip">🔒 Cerrado</span>`;
             else if (existingPick) statusChip = `<span class="match-status-locked">🔒 TU PICK</span>`;
             else                   statusChip = `<span class="match-status-open">⏰ ${getTimeUntilLock(match)}</span>`;
