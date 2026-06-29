@@ -1730,6 +1730,75 @@ function updateLeaderboard() {
     }).join('');
 }
 
+// ── Top Goleadores ──────────────────────────────────────────────────────────
+
+let _topScorersCache = null;
+
+async function fetchTopScorers() {
+    if (_topScorersCache) return _topScorersCache;
+    try {
+        const res = await fetch('https://sports.core.api.espn.com/v2/sports/soccer/leagues/fifa.world/seasons/2026/types/1/leaders');
+        const data = await res.json();
+        const cat = data.categories?.find(c => c.name === 'goalsLeaders');
+        if (!cat) return [];
+        const top10 = cat.leaders.slice(0, 10);
+        const scorers = await Promise.all(top10.map(async (l) => {
+            const ar = await fetch(l.athlete.$ref);
+            const athlete = await ar.json();
+            const flagUrl = athlete.flag?.href || '';
+            const m = flagUrl.match(/\/([a-z]{2,3})\.png$/i);
+            const countryCode = m ? m[1].toUpperCase() : '';
+            return { name: athlete.fullName || athlete.displayName, goals: Math.round(l.value), country: countryCode };
+        }));
+        _topScorersCache = scorers;
+        return scorers;
+    } catch (e) {
+        console.error('fetchTopScorers error:', e);
+        return [];
+    }
+}
+
+const COUNTRY_FLAG = { ARG:'🇦🇷', BRA:'🇧🇷', FRA:'🇫🇷', ENG:'🇬🇧', ESP:'🇪🇸', POR:'🇵🇹', GER:'🇩🇪', NED:'🇳🇱', URU:'🇺🇾', COL:'🇨🇴', MEX:'🇲🇽', USA:'🇺🇸', CRO:'🇭🇷', ITA:'🇮🇹', BEL:'🇧🇪', DEN:'🇩🇰', SUI:'🇨🇭', SEN:'🇸🇳', JAP:'🇯🇵', KOR:'🇰🇷', MAR:'🇲🇦', AUS:'🇦🇺', GHA:'🇬🇭', CAN:'🇨🇦', ECU:'🇪🇨', PAN:'🇵🇦', PAR:'🇵🇾', BOL:'🇧🇴', SAU:'🇸🇦', IRN:'🇮🇷', TUN:'🇹🇳', CMR:'🇨🇲', NGA:'🇳🇬', EGY:'🇪🇬', SLO:'🇸🇮', SVK:'🇸🇰', AUT:'🇦🇹', SCO:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', WAL:'🏴󠁧󠁢󠁷󠁬󠁳󠁿', POL:'🇵🇱', SRB:'🇷🇸', HUN:'🇭🇺', ROM:'🇷🇴', UKR:'🇺🇦', TUR:'🇹🇷', GRE:'🇬🇷', ALB:'🇦🇱', GEO:'🇬🇪', VEN:'🇻🇪', PER:'🇵🇪', CHI:'🇨🇱', HON:'🇭🇳', CRC:'🇨🇷', QAT:'🇶🇦', UAE:'🇦🇪', KSA:'🇸🇦', IRQ:'🇮🇶', JOR:'🇯🇴' };
+
+function flagEmoji(code) { return COUNTRY_FLAG[code] || ''; }
+
+async function renderTopScorers() {
+    const container = document.getElementById('topScorersContainer');
+    if (!container) return;
+    container.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:24px;font-size:0.9rem;">Cargando...</div>';
+    const scorers = await fetchTopScorers();
+    if (!scorers.length) {
+        container.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:24px;">No hay datos disponibles.</div>';
+        return;
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    const showAll = container.dataset.expanded === '1';
+    const visible = showAll ? scorers : scorers.slice(0, 3);
+    const rows = visible.map((s, i) => {
+        const rank = i < 3 ? medals[i] : `<span style="color:var(--text-dim);font-weight:700;width:24px;display:inline-block;text-align:center;">${i + 1}</span>`;
+        const flag = flagEmoji(s.country);
+        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span style="font-size:1.2rem;width:28px;text-align:center;flex-shrink:0;">${rank}</span>
+            <span style="flex:1;font-size:0.95rem;font-weight:600;">${flag ? flag + ' ' : ''}${s.name}</span>
+            <span style="font-size:1.1rem;font-weight:700;color:#00FF88;">${s.goals}</span>
+            <span style="font-size:0.75rem;color:var(--text-dim);margin-left:2px;">⚽</span>
+        </div>`;
+    }).join('');
+    const toggleBtn = scorers.length > 3
+        ? `<button onclick="toggleTopScorers()" style="background:none;border:1px solid rgba(255,255,255,0.15);color:var(--text-dim);border-radius:8px;padding:8px 16px;font-size:0.82rem;cursor:pointer;width:100%;margin-top:12px;">
+            ${showAll ? '▲ Ver menos' : `▼ Ver todos (${scorers.length})`}
+           </button>`
+        : '';
+    container.innerHTML = `<div>${rows}</div>${toggleBtn}`;
+}
+
+function toggleTopScorers() {
+    const container = document.getElementById('topScorersContainer');
+    if (!container) return;
+    container.dataset.expanded = container.dataset.expanded === '1' ? '0' : '1';
+    renderTopScorers();
+}
+
 // Pronósticos públicos: visibles desde el inicio del partido
 function renderAllPicks() {
     const container = document.getElementById('allPicksContainer');
@@ -1888,6 +1957,7 @@ function updateStats() {
     if (rankEl) rankEl.textContent = me ? `#${myRank}` : '-';
 
     renderCharts(displayName);
+    renderTopScorers();
     renderAllPicks();
 }
 
