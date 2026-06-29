@@ -1605,8 +1605,8 @@ input:focus, select:focus {
 .kp-match-top {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    justify-content: flex-start;
+    gap: 10px;
     margin-bottom: 8px;
     flex-wrap: wrap;
 }
@@ -1651,7 +1651,9 @@ input:focus, select:focus {
     white-space: nowrap;
 }
 .kp-locked-match {
-    opacity: 0.65;
+    opacity: 0.6;
+    background: rgba(255, 51, 102, 0.1);
+    border-left-color: var(--secondary) !important;
 }
 
 /* ── Celda de equipo con slot ── */
