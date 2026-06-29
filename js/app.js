@@ -2419,11 +2419,16 @@ function renderKnockoutPredictions() {
             const kicked       = match.dateTime && new Date() >= new Date(match.dateTime) - 60000;
             const inputLocked  = !!savedResult || kicked || !!existingPick;
 
+            // Chip de estado (igual que statusBadge en grupos)
             let statusChip;
-            if (savedResult)       statusChip = `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`;
+            if (existingPick)      statusChip = `<span class="match-status-locked">🔒 TU PICK</span>`;
             else if (kicked)       statusChip = `<span class="kp-locked-chip">🔒 Cerrado</span>`;
-            else if (existingPick) statusChip = `<span class="match-status-locked">🔒 TU PICK</span>`;
             else                   statusChip = `<span class="match-status-open">⏰ ${getTimeUntilLock(match)}</span>`;
+
+            // Chip de resultado (igual que liveBadge en grupos) — aparece junto al de estado
+            const resultChip = savedResult
+                ? `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`
+                : '';
 
             const v1 = existingPick?.score1 ?? '';
             const v2 = existingPick?.score2 ?? '';
@@ -2432,7 +2437,7 @@ function renderKnockoutPredictions() {
             <div class="match-prediction${inputLocked ? ' kp-locked-match' : ''}">
                 <div class="kp-match-top">
                     <span class="match-info">${match.id} · ${match.time}</span>
-                    ${statusChip}
+                    ${statusChip}${resultChip}
                 </div>
                 <div class="match-teams-row">
                     ${_koTeamCell(match.slot1, groupStandings, bestThirds, false)}
