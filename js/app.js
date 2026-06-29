@@ -716,18 +716,41 @@ async function fetchLiveScores() {
             // Auto-guardar resultados finales con patrón individual (result:matchId)
             // Doble guard: ESPN STATUS_FULL_TIME + kickoff ya pasó (ESPN a veces pre-carga STATUS_FULL_TIME en partidos futuros)
             if (statusType.name === 'STATUS_FULL_TIME') {
+                const now = new Date();
+
+                // Fase de grupos: busca por nombres de equipo
                 const internalMatch = matches.find(m =>
                     stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
                 );
-                const kickoffPassed = internalMatch && new Date(internalMatch.dateTime) <= new Date();
-                if (internalMatch && kickoffPassed && !results.find(r => r.matchId === internalMatch.id)) {
+                if (internalMatch && new Date(internalMatch.dateTime) <= now && !results.find(r => r.matchId === internalMatch.id)) {
                     results.push({ matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     await storage.set(`result:${internalMatch.id}`, { matchId: internalMatch.id, score1: homeScore, score2: awayScore });
                     changed = true;
                     logAction(sessionStorage.getItem('pollaUser'), 'auto_save_result', {
-                        matchId: internalMatch.id, home: homeEs, away: awayEs,
-                        score: `${homeScore}-${awayScore}`
+                        matchId: internalMatch.id, home: homeEs, away: awayEs, score: `${homeScore}-${awayScore}`
                     });
+                }
+
+                // Fase eliminatoria: busca por fecha/hora del partido (±20 min de tolerancia)
+                if (!internalMatch) {
+                    const espnKickoff = comp.date ? new Date(comp.date) : null;
+                    if (espnKickoff) {
+                        for (const rKey of GROUPS_TAB_ROUNDS) {
+                            const koMatch = BRACKET[rKey].matches.find(m => {
+                                const diff = Math.abs(new Date(m.dateTime).getTime() - espnKickoff.getTime());
+                                return diff < 20 * 60 * 1000;
+                            });
+                            if (koMatch && new Date(koMatch.dateTime) <= now && !results.find(r => r.matchId === koMatch.id)) {
+                                results.push({ matchId: koMatch.id, score1: homeScore, score2: awayScore });
+                                await storage.set(`result:${koMatch.id}`, { matchId: koMatch.id, score1: homeScore, score2: awayScore });
+                                changed = true;
+                                logAction(sessionStorage.getItem('pollaUser'), 'auto_save_result', {
+                                    matchId: koMatch.id, home: homeEs, away: awayEs, score: `${homeScore}-${awayScore}`
+                                });
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
