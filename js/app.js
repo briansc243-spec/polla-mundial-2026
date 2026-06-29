@@ -1322,9 +1322,11 @@ function renderMatches() {
                 const mPE = new Date(new Date(m.dateTime).toLocaleString('en-US', { timeZone: 'America/Lima' }));
                 const mDayStr = toDS(mPE);
                 const isToday = mDayStr === todayStr;
+                const modalMsLeft = m.dateTime ? new Date(m.dateTime) - new Date() : Infinity;
+                const modalUrgent = !hasPick && modalMsLeft > 0 && modalMsLeft < 12 * 60 * 60 * 1000;
                 const rightSide = hasPick
                     ? `<span style="color:#00FF88;font-weight:700;white-space:nowrap;">✅ PICK</span>`
-                    : `<span style="font-weight:700;white-space:nowrap;">⏰ ${getTimeUntilLock(m)}</span>`;
+                    : `<span style="font-weight:700;white-space:nowrap;${modalUrgent ? 'color:#FF3366;' : ''}">⏰ ${getTimeUntilLock(m)}</span>`;
 
                 let separator = '';
                 if (mDayStr !== lastDayBanner) {
@@ -1397,7 +1399,8 @@ function renderMatches() {
                     const disabledAttr = locked ? 'disabled' : '';
                     const savedResult = results.find(r => r.matchId === match.id);
                     const msLeft = new Date(match.dateTime) - new Date();
-                    const closingSoon = !locked && !savedResult && msLeft > 0 && msLeft < 48 * 60 * 60 * 1000;
+                    const closingSoon = !locked && !savedPred && msLeft > 0 && msLeft < 48 * 60 * 60 * 1000;
+                    const closingUrgent = !locked && !savedPred && msLeft > 0 && msLeft < 12 * 60 * 60 * 1000;
 
                     const val1 = savedPred ? savedPred.score1 : '';
                     const val2 = savedPred ? savedPred.score2 : '';
@@ -1407,7 +1410,7 @@ function renderMatches() {
                         : lockedByTime
                             ? '<span class="match-status-locked">🔒 CERRADO</span>'
                             : timeInfo
-                                ? `<span class="match-status-open${closingSoon ? ' match-closing-soon' : ''}">⏰ ${timeInfo}</span>`
+                                ? `<span class="match-status-open${closingUrgent ? ' match-closing-urgent' : closingSoon ? ' match-closing-soon' : ''}">⏰ ${timeInfo}</span>`
                                 : '';
 
                     // Live score badge
@@ -2482,10 +2485,12 @@ function renderKnockoutPredictions() {
             const inputLocked  = !!savedResult || kicked || !!existingPick;
 
             // Chip de estado (igual que statusBadge en grupos)
+            const koMsLeft = match.dateTime ? new Date(match.dateTime) - new Date() : Infinity;
+            const koUrgent = !existingPick && koMsLeft > 0 && koMsLeft < 12 * 60 * 60 * 1000;
             let statusChip;
             if (existingPick)      statusChip = `<span class="match-status-locked">🔒 TU PICK</span>`;
             else if (kicked)       statusChip = `<span class="kp-locked-chip">🔒 Cerrado</span>`;
-            else                   statusChip = `<span class="match-status-open">⏰ ${getTimeUntilLock(match)}</span>`;
+            else                   statusChip = `<span class="match-status-open${koUrgent ? ' match-closing-urgent' : ''}">⏰ ${getTimeUntilLock(match)}</span>`;
 
             // Chip de resultado (igual que liveBadge en grupos) — aparece junto al de estado
             const resultChip = savedResult
