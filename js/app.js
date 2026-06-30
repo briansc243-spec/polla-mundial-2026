@@ -1236,18 +1236,10 @@ function renderMyPredictions() {
             </div>`;
     }
 
-    // Fase de grupos
-    Object.keys(grouped).sort().forEach(group => {
-        html += `<h4 style="color:var(--primary); margin:16px 0 8px; font-size:0.95rem; letter-spacing:1px;">GRUPO ${group}</h4>`;
-        grouped[group].forEach(({ match, pred }) => {
-            const result = results.find(r => r.matchId === match.id);
-            html += pickCardHtml(formatPETime(match.dateTime), match.team1, match.team2, pred, result);
-        });
-    });
-
-    // Fase eliminatoria
+    // Fase eliminatoria — va primero
     const groupStandingsMP = getGroupStandings();
     const bestThirdsMP     = computeBestThirds(groupStandingsMP);
+    let knockoutHtml = '';
 
     for (const key of PREDICTIONS_TAB_ROUNDS) {
         const round = BRACKET[key];
@@ -1256,13 +1248,42 @@ function renderMyPredictions() {
             .filter(({ pred }) => pred);
         if (roundPicks.length === 0) continue;
 
-        html += `<h4 style="color:var(--primary); margin:20px 0 8px; font-size:0.95rem; letter-spacing:1px;">${round.emoji} ${round.title.toUpperCase()}</h4>`;
+        knockoutHtml += `<h4 style="color:var(--primary); margin:20px 0 8px; font-size:0.95rem; letter-spacing:1px;">${round.emoji} ${round.title.toUpperCase()}</h4>`;
         roundPicks.forEach(({ match, pred }) => {
             const result = results.find(r => r.matchId === match.id);
             const { team1: name1, team2: name2 } = getActualTeams(match, groupStandingsMP, bestThirdsMP);
-            html += pickCardHtml(match.time, name1, name2, pred, result);
+            knockoutHtml += pickCardHtml(match.time, name1, name2, pred, result);
         });
     }
+    if (knockoutHtml) html += knockoutHtml;
+
+    // Fase de grupos — colapsable
+    const gsIsOpen = sessionStorage.getItem('myPredGruposOpen') !== 'false';
+    const totalGroupPicks = Object.values(grouped).reduce((s, arr) => s + arr.length, 0);
+    html += `
+        <div style="margin-top:20px;">
+            <div onclick="(function(){
+                const open = sessionStorage.getItem('myPredGruposOpen') !== 'false';
+                sessionStorage.setItem('myPredGruposOpen', open ? 'false' : 'true');
+                const body = document.getElementById('myPredGruposBody');
+                const arrow = document.getElementById('myPredGruposArrow');
+                if (body) body.style.display = open ? 'none' : 'block';
+                if (arrow) arrow.textContent = open ? '▸' : '▾';
+            })()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 16px;background:rgba(0,217,255,0.06);border:1px solid rgba(0,217,255,0.2);border-radius:10px;user-select:none;">
+                <span style="color:var(--primary);font-size:0.95rem;font-weight:700;letter-spacing:1px;">🌍 FASE DE GRUPOS <span style="font-size:0.8rem;opacity:0.6;font-weight:400;">(${totalGroupPicks} picks)</span></span>
+                <span id="myPredGruposArrow" style="color:var(--primary);font-size:1rem;">${gsIsOpen ? '▾' : '▸'}</span>
+            </div>
+            <div id="myPredGruposBody" style="display:${gsIsOpen ? 'block' : 'none'}; padding-top:8px;">`;
+
+    Object.keys(grouped).sort().forEach(group => {
+        html += `<h4 style="color:var(--primary); margin:16px 0 8px; font-size:0.95rem; letter-spacing:1px;">GRUPO ${group}</h4>`;
+        grouped[group].forEach(({ match, pred }) => {
+            const result = results.find(r => r.matchId === match.id);
+            html += pickCardHtml(formatPETime(match.dateTime), match.team1, match.team2, pred, result);
+        });
+    });
+
+    html += `</div></div>`;
 
     container.innerHTML = html;
 }
