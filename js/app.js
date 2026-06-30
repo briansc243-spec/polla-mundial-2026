@@ -1745,28 +1745,45 @@ function updateLeaderboard() {
 // ── Top Goleadores ──────────────────────────────────────────────────────────
 
 let _topScorersCache = null;
-let _topScorersCacheTime = 0;
-const SCORERS_TTL = 5 * 60 * 1000; // 5 minutos
 
+// Calcula goleadores directamente del scoreboard (events[].competitions[0].details[]),
+// en vez del endpoint /leaders de ESPN que se actualiza con horas de retraso.
+// El cache se invalida en fetchLiveScores cuando un partido pasa a estado finalizado.
 async function fetchTopScorers() {
-    if (_topScorersCache && (Date.now() - _topScorersCacheTime) < SCORERS_TTL) return _topScorersCache;
+    if (_topScorersCache) return _topScorersCache;
     try {
-        const res = await fetch('https://sports.core.api.espn.com/v2/sports/soccer/leagues/fifa.world/seasons/2026/types/1/leaders');
+        const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719');
         const data = await res.json();
-        const cat = data.categories?.find(c => c.name === 'goalsLeaders');
-        if (!cat) return [];
-        const top10 = cat.leaders.slice(0, 10);
-        const scorers = await Promise.all(top10.map(async (l) => {
-            const athleteUrl = l.athlete.$ref.replace(/^http:\/\//, 'https://');
-            const ar = await fetch(athleteUrl);
-            const athlete = await ar.json();
-            const flagUrl = athlete.flag?.href || '';
-            const m = flagUrl.match(/\/([a-z]{2,3})\.png$/i);
-            const countryCode = m ? m[1].toUpperCase() : '';
-            return { name: athlete.fullName || athlete.displayName, goals: Math.round(l.value), country: countryCode };
-        }));
+        const tally = {}; // athleteId -> { name, goals, country }
+
+        for (const ev of data.events || []) {
+            const comp = ev.competitions?.[0];
+            if (!comp) continue;
+            const teamAbbr = {};
+            for (const c of comp.competitors || []) {
+                teamAbbr[c.team.id] = c.team.abbreviation;
+            }
+            for (const det of comp.details || []) {
+                // ESPN usa sub-tipos distintos para goles ('Goal - Header', 'Goal - Free-kick',
+                // 'Penalty - Scored', etc.) — no filtrar por type.text, usar scoringPlay + !ownGoal.
+                // shootout=true son penales de la tanda de desempate, no cuentan como gol del jugador.
+                if (!det.scoringPlay || det.ownGoal || det.shootout) continue;
+                const scorer = det.athletesInvolved?.[0];
+                if (!scorer) continue;
+                const key = scorer.id;
+                if (!tally[key]) {
+                    tally[key] = {
+                        name: scorer.fullName || scorer.displayName,
+                        goals: 0,
+                        country: teamAbbr[scorer.team?.id] || teamAbbr[det.team?.id] || '',
+                    };
+                }
+                tally[key].goals++;
+            }
+        }
+
+        const scorers = Object.values(tally).sort((a, b) => b.goals - a.goals).slice(0, 10);
         _topScorersCache = scorers;
-        _topScorersCacheTime = Date.now();
         return scorers;
     } catch (e) {
         console.error('fetchTopScorers error:', e);
