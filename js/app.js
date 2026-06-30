@@ -759,6 +759,7 @@ async function fetchLiveScores() {
         }
 
         if (changed) {
+            _topScorersCache = null; // forzar refetch de goleadores al terminar partido
             await init();
             showToast('✅ Resultados actualizados automáticamente');
         } else {
@@ -1744,9 +1745,11 @@ function updateLeaderboard() {
 // ── Top Goleadores ──────────────────────────────────────────────────────────
 
 let _topScorersCache = null;
+let _topScorersCacheTime = 0;
+const SCORERS_TTL = 5 * 60 * 1000; // 5 minutos
 
 async function fetchTopScorers() {
-    if (_topScorersCache) return _topScorersCache;
+    if (_topScorersCache && (Date.now() - _topScorersCacheTime) < SCORERS_TTL) return _topScorersCache;
     try {
         const res = await fetch('https://sports.core.api.espn.com/v2/sports/soccer/leagues/fifa.world/seasons/2026/types/1/leaders');
         const data = await res.json();
@@ -1763,6 +1766,7 @@ async function fetchTopScorers() {
             return { name: athlete.fullName || athlete.displayName, goals: Math.round(l.value), country: countryCode };
         }));
         _topScorersCache = scorers;
+        _topScorersCacheTime = Date.now();
         return scorers;
     } catch (e) {
         console.error('fetchTopScorers error:', e);
