@@ -725,26 +725,44 @@ async function fetchLiveScores() {
             }
 
             // Auto-guardar resultados finales con patrón individual (result:matchId)
-            // STATUS_FINAL_AET excluido: ESPN solo da el score con tiempo extra, no el score a 90',
-            // y la polla puntúa sobre el score a 90'. Los AET se guardan manualmente con score1ET/score2ET.
-            const FINISHED_STATUSES = ['STATUS_FULL_TIME', 'STATUS_FINAL_PEN'];
+            const FINISHED_STATUSES = ['STATUS_FULL_TIME', 'STATUS_FINAL_AET', 'STATUS_FINAL_PEN'];
             if (FINISHED_STATUSES.includes(statusType.name)) {
                 const now = new Date();
+
+                // Para AET: recalcular score a 90' desde details[] usando convención de reloj ESPN.
+                // clock < 91 = tiempo reglamentario (incluso añadidos: "90'+5'" → parseInt = 90).
+                // clock >= 91 = tiempo extra. ESPN nunca usa 91' para añadido de regulación.
+                let score1 = homeScore, score2 = awayScore;
+                let score1ET = null, score2ET = null;
+                if (statusType.name === 'STATUS_FINAL_AET' && comp.details?.length) {
+                    let h90 = 0, a90 = 0, hAll = 0, aAll = 0;
+                    const homeId = home.team.id;
+                    for (const det of comp.details) {
+                        if (!det.scoringPlay || det.ownGoal || det.shootout) continue;
+                        const clockMin = parseInt(det.clock?.displayValue || '0');
+                        const isHome = det.team?.id === homeId;
+                        if (clockMin < 91) { if (isHome) h90++; else a90++; }
+                        if (isHome) hAll++; else aAll++;
+                    }
+                    score1 = h90; score2 = a90;
+                    score1ET = hAll; score2ET = aAll;
+                }
 
                 // Fase de grupos: busca por nombres de equipo
                 const internalMatch = matches.find(m =>
                     stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
                 );
                 if (internalMatch && new Date(internalMatch.dateTime) <= now && !results.find(r => r.matchId === internalMatch.id)) {
-                    results.push({ matchId: internalMatch.id, score1: homeScore, score2: awayScore });
-                    await storage.set(`result:${internalMatch.id}`, { matchId: internalMatch.id, score1: homeScore, score2: awayScore });
+                    const val = { matchId: internalMatch.id, score1, score2, ...(score1ET !== null && { score1ET, score2ET }) };
+                    results.push(val);
+                    await storage.set(`result:${internalMatch.id}`, val);
                     changed = true;
                     logAction(sessionStorage.getItem('pollaUser'), 'auto_save_result', {
-                        matchId: internalMatch.id, home: homeEs, away: awayEs, score: `${homeScore}-${awayScore}`
+                        matchId: internalMatch.id, home: homeEs, away: awayEs, score: `${score1}-${score2}`
                     });
                 }
 
-                // Fase eliminatoria: busca por fecha/hora del partido (±20 min de tolerancia)
+                // Fase eliminatoria: busca por fecha/hora del partido (±90 min de tolerancia)
                 if (!internalMatch) {
                     const espnKickoff = comp.date ? new Date(comp.date.replace(/T(\d{2}:\d{2})Z$/, 'T$1:00Z')) : null;
                     if (espnKickoff) {
@@ -754,11 +772,12 @@ async function fetchLiveScores() {
                                 return diff < 90 * 60 * 1000;
                             });
                             if (koMatch && new Date(koMatch.dateTime) <= now && !results.find(r => r.matchId === koMatch.id)) {
-                                results.push({ matchId: koMatch.id, score1: homeScore, score2: awayScore });
-                                await storage.set(`result:${koMatch.id}`, { matchId: koMatch.id, score1: homeScore, score2: awayScore });
+                                const val = { matchId: koMatch.id, score1, score2, ...(score1ET !== null && { score1ET, score2ET }) };
+                                results.push(val);
+                                await storage.set(`result:${koMatch.id}`, val);
                                 changed = true;
                                 logAction(sessionStorage.getItem('pollaUser'), 'auto_save_result', {
-                                    matchId: koMatch.id, home: homeEs, away: awayEs, score: `${homeScore}-${awayScore}`
+                                    matchId: koMatch.id, home: homeEs, away: awayEs, score: `${score1}-${score2}`
                                 });
                                 break;
                             }
