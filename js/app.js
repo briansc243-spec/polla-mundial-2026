@@ -1250,7 +1250,11 @@ function renderMyPredictions() {
         if (roundPicks.length === 0) continue;
 
         knockoutHtml += `<h4 style="color:var(--primary); margin:20px 0 8px; font-size:0.95rem; letter-spacing:1px;">${round.emoji} ${round.title.toUpperCase()}</h4>`;
-        roundPicks.forEach(({ match, pred }) => {
+        // Terminados primero (desc por fecha), luego pendientes (desc por fecha)
+        const finished = roundPicks.filter(({ match }) => results.find(r => r.matchId === match.id));
+        const pending  = roundPicks.filter(({ match }) => !results.find(r => r.matchId === match.id));
+        const byDateDesc = (a, b) => new Date(b.match.dateTime) - new Date(a.match.dateTime);
+        [...finished.sort(byDateDesc), ...pending.sort(byDateDesc)].forEach(({ match, pred }) => {
             const result = results.find(r => r.matchId === match.id);
             const { team1: name1, team2: name2 } = getActualTeams(match, groupStandingsMP, bestThirdsMP);
             knockoutHtml += pickCardHtml(match.time, name1, name2, pred, result);
