@@ -741,7 +741,7 @@ async function fetchLiveScores() {
                         for (const rKey of GROUPS_TAB_ROUNDS) {
                             const koMatch = BRACKET[rKey].matches.find(m => {
                                 const diff = Math.abs(new Date(m.dateTime).getTime() - espnKickoff.getTime());
-                                return diff < 20 * 60 * 1000;
+                                return diff < 90 * 60 * 1000;
                             });
                             if (koMatch && new Date(koMatch.dateTime) <= now && !results.find(r => r.matchId === koMatch.id)) {
                                 results.push({ matchId: koMatch.id, score1: homeScore, score2: awayScore });
@@ -2228,7 +2228,7 @@ const BRACKET = {
             // 30 junio
             { id: 'P78',  dateTime: '2026-06-30T17:00:00Z', slot1: '2° Grupo E', slot2: '2° Grupo I',             time: '30 jun · 12:00 PM PE', venue: 'AT&T Stadium, Arlington' },
             { id: 'P77',  dateTime: '2026-06-30T21:00:00Z', slot1: '1° Grupo I', slot2: 'Mejor 3° (C/D/F/G/H)',   time: '30 jun · 4:00 PM PE',  venue: 'MetLife Stadium, Nueva Jersey' },
-            { id: 'P79',  dateTime: '2026-07-01T01:00:00Z', slot1: '1° Grupo A', slot2: 'Mejor 3° (C/E/F/H/I)',   time: '30 jun · 8:00 PM PE',  venue: 'Estadio Azteca, Ciudad de México' },
+            { id: 'P79',  dateTime: '2026-07-01T02:00:00Z', slot1: '1° Grupo A', slot2: 'Mejor 3° (C/E/F/H/I)',   time: '30 jun · 9:00 PM PE',  venue: 'Estadio Azteca, Ciudad de México' },
             // 1 julio
             { id: 'P80',  dateTime: '2026-07-01T16:00:00Z', slot1: '1° Grupo L', slot2: 'Mejor 3° (E/H/I/J/K)',   time: '1 jul · 11:00 AM PE',  venue: 'Mercedes-Benz Stadium, Atlanta' },
             { id: 'P82',  dateTime: '2026-07-01T20:00:00Z', slot1: '1° Grupo G', slot2: 'Mejor 3° (A/E/H/I/J)',   time: '1 jul · 3:00 PM PE',   venue: 'Lumen Field, Seattle' },
@@ -2328,7 +2328,7 @@ async function fetchActualBracketTeams() {
             const espnDate = new Date(comp.date.replace(/T(\d{2}:\d{2})Z$/, 'T$1:00Z'));
             const bracketMatch = allBracketMatches.find(m => {
                 if (!m.dateTime) return false;
-                return Math.abs(new Date(m.dateTime).getTime() - espnDate.getTime()) < 20 * 60 * 1000;
+                return Math.abs(new Date(m.dateTime).getTime() - espnDate.getTime()) < 90 * 60 * 1000;
             });
             if (bracketMatch && comp.competitors.length >= 2) {
                 const h = comp.competitors[0].team.displayName;
