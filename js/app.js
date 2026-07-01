@@ -655,6 +655,15 @@ const ESPN_TO_ES = {
     'Scotland': 'Escocia',
 };
 
+// Texto del resultado para mostrar en cards y chips.
+// Si el partido terminó en tiempo extra (score1ET existe), muestra "90' score · ET: AET score".
+function resultScoreLabel(result) {
+    if (!result) return '';
+    const base = `${result.score1}-${result.score2}`;
+    if (result.score1ET != null) return `${base} · ET: ${result.score1ET}-${result.score2ET}`;
+    return base;
+}
+
 function stripFlag(name) {
     return name.replace(/^[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]+/, '').trim();
 }
@@ -716,8 +725,9 @@ async function fetchLiveScores() {
             }
 
             // Auto-guardar resultados finales con patrón individual (result:matchId)
-            // Doble guard: ESPN STATUS_FULL_TIME/FINAL_AET/FINAL_PEN + kickoff ya pasó (ESPN a veces pre-carga STATUS_FULL_TIME en partidos futuros)
-            const FINISHED_STATUSES = ['STATUS_FULL_TIME', 'STATUS_FINAL_AET', 'STATUS_FINAL_PEN'];
+            // STATUS_FINAL_AET excluido: ESPN solo da el score con tiempo extra, no el score a 90',
+            // y la polla puntúa sobre el score a 90'. Los AET se guardan manualmente con score1ET/score2ET.
+            const FINISHED_STATUSES = ['STATUS_FULL_TIME', 'STATUS_FINAL_PEN'];
             if (FINISHED_STATUSES.includes(statusType.name)) {
                 const now = new Date();
 
@@ -809,7 +819,7 @@ function renderLiveBar() {
         const t2 = teamVisit(m.team2);
 
         if (result) {
-            return `<span style="color:#00D9FF;">${t1} vs ${t2} · ${result.score1}-${result.score2} FINAL</span>`;
+            return `<span style="color:#00D9FF;">${t1} vs ${t2} · ${resultScoreLabel(result)} FINAL</span>`;
         } else if (live && live.status === 'IN_PLAY') {
             return `<span style="color:#00FF88;"><span class="live-bar-label">🔴 En Vivo</span> ${t1} vs ${t2} · ⚽ ${live.home_score}-${live.away_score} · ${live.minute}</span>`;
         } else if (live && live.status === 'PAUSED') {
@@ -1212,11 +1222,17 @@ function renderMyPredictions() {
     }
 
     function scoreBlockHtml(pred, result) {
-        if (result) return `
+        if (result) {
+            const etLine = result.score1ET != null
+                ? `<div style="font-size:0.68rem;color:#A0A8C0;margin-top:2px;">ET: ${result.score1ET}-${result.score2ET}</div>`
+                : '';
+            return `
             <div style="text-align:center; min-width:80px;">
                 <div style="background:rgba(0,217,255,0.12);color:#00D9FF;padding:4px 12px;border-radius:8px;font-weight:700;font-size:1rem;">${result.score1} - ${result.score2}</div>
-                <div style="font-size:0.72rem;color:#A0A8C0;margin-top:3px;">tu pick: ${pred.score1}–${pred.score2}</div>
+                ${etLine}
+                <div style="font-size:0.72rem;color:#A0A8C0;margin-top:2px;">tu pick: ${pred.score1}–${pred.score2}</div>
             </div>`;
+        }
         return `
             <div style="text-align:center; min-width:80px;">
                 <span style="background:rgba(0,217,255,0.08);color:#5A8FA8;padding:4px 12px;border-radius:8px;font-weight:700;font-size:1rem;border:1px dashed rgba(0,217,255,0.2);">${pred.score1} - ${pred.score2}</span>
@@ -1438,7 +1454,7 @@ function renderMatches() {
                     const isInTimeWindow = minsSinceStart >= 0 && minsSinceStart < 130;
                     let liveBadge = '';
                     if (savedResult) {
-                        liveBadge = `<span style="background:rgba(0,217,255,0.1); border:1px solid #00D9FF; color:#00D9FF; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`;
+                        liveBadge = `<span style="background:rgba(0,217,255,0.1); border:1px solid #00D9FF; color:#00D9FF; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">✅ ${resultScoreLabel(savedResult)} · FINAL</span>`;
                     } else if (live && live.status === 'IN_PLAY') {
                         liveBadge = `<span style="background:rgba(0,255,136,0.15); border:1px solid #00FF88; color:#00FF88; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; animation:pulse 1.5s infinite;">⚽ ${live.home_score}-${live.away_score} · ${live.minute || ''}' EN VIVO</span>`;
                     } else if (live && live.status === 'PAUSED') {
@@ -1939,7 +1955,7 @@ function renderAllPicks() {
         }).join('');
 
         const resultTag = result
-            ? `<span style="color:#00D9FF;font-weight:700;margin-left:8px;">· ${result.score1}-${result.score2} FINAL</span>`
+            ? `<span style="color:#00D9FF;font-weight:700;margin-left:8px;">· ${resultScoreLabel(result)} FINAL</span>`
             : '';
 
         return `<details style="margin-bottom:10px;border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;">
@@ -2698,7 +2714,7 @@ function renderKnockoutPredictions() {
             const koLive = koLiveKey ? liveScores[koLiveKey] : null;
             let resultChip = '';
             if (savedResult) {
-                resultChip = `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${savedResult.score1}-${savedResult.score2} · FINAL</span>`;
+                resultChip = `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${resultScoreLabel(savedResult)} · FINAL</span>`;
             } else if (koLive && koLive.status === 'IN_PLAY') {
                 resultChip = `<span style="background:rgba(0,255,136,0.15);border:1px solid #00FF88;color:#00FF88;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;animation:pulse 1.5s infinite;">⚽ ${koLive.home_score}-${koLive.away_score} · ${koLive.minute || ''}' EN VIVO</span>`;
             } else if (koLive && koLive.status === 'PAUSED') {
