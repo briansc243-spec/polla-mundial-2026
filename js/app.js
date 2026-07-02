@@ -655,13 +655,16 @@ const ESPN_TO_ES = {
     'Scotland': 'Escocia',
 };
 
-// Texto del resultado para mostrar en cards y chips.
-// Si el partido terminó en tiempo extra (score1ET existe), muestra "90' score · ET: AET score".
+// Texto del resultado: "2-1" o "2-2" (score a 90', sin sufijos).
+// Para el sufijo ET usar resultETSuffix().
 function resultScoreLabel(result) {
     if (!result) return '';
-    const base = `${result.score1}-${result.score2}`;
-    if (result.score1ET != null) return `${base} · ET: ${result.score1ET}-${result.score2ET}`;
-    return base;
+    return `${result.score1}-${result.score2}`;
+}
+// Sufijo cuando hubo tiempo extra: " · no cuenta ET: 3-2"
+function resultETSuffix(result) {
+    if (!result || result.score1ET == null) return '';
+    return ` · no cuenta ET: ${result.score1ET}-${result.score2ET}`;
 }
 
 function stripFlag(name) {
@@ -838,7 +841,7 @@ function renderLiveBar() {
         const t2 = teamVisit(m.team2);
 
         if (result) {
-            return `<span style="color:#00D9FF;">${t1} vs ${t2} · ${resultScoreLabel(result)} FINAL</span>`;
+            return `<span style="color:#00D9FF;">${t1} vs ${t2} · ${resultScoreLabel(result)} FINAL${resultETSuffix(result)}</span>`;
         } else if (live && live.status === 'IN_PLAY') {
             return `<span style="color:#00FF88;"><span class="live-bar-label">🔴 En Vivo</span> ${t1} vs ${t2} · ⚽ ${live.home_score}-${live.away_score} · ${live.minute}</span>`;
         } else if (live && live.status === 'PAUSED') {
@@ -1243,7 +1246,7 @@ function renderMyPredictions() {
     function scoreBlockHtml(pred, result) {
         if (result) {
             const etLine = result.score1ET != null
-                ? `<div style="font-size:0.68rem;color:#A0A8C0;margin-top:2px;">ET: ${result.score1ET}-${result.score2ET}</div>`
+                ? `<div style="font-size:0.68rem;color:#A0A8C0;margin-top:2px;">no cuenta ET: ${result.score1ET}-${result.score2ET}</div>`
                 : '';
             return `
             <div style="text-align:center; min-width:80px;">
@@ -1473,7 +1476,7 @@ function renderMatches() {
                     const isInTimeWindow = minsSinceStart >= 0 && minsSinceStart < 130;
                     let liveBadge = '';
                     if (savedResult) {
-                        liveBadge = `<span style="background:rgba(0,217,255,0.1); border:1px solid #00D9FF; color:#00D9FF; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">✅ ${resultScoreLabel(savedResult)} · FINAL</span>`;
+                        liveBadge = `<span style="background:rgba(0,217,255,0.1); border:1px solid #00D9FF; color:#00D9FF; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700;">✅ ${resultScoreLabel(savedResult)} FINAL${resultETSuffix(savedResult)}</span>`;
                     } else if (live && live.status === 'IN_PLAY') {
                         liveBadge = `<span style="background:rgba(0,255,136,0.15); border:1px solid #00FF88; color:#00FF88; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:700; animation:pulse 1.5s infinite;">⚽ ${live.home_score}-${live.away_score} · ${live.minute || ''}' EN VIVO</span>`;
                     } else if (live && live.status === 'PAUSED') {
@@ -1974,7 +1977,7 @@ function renderAllPicks() {
         }).join('');
 
         const resultTag = result
-            ? `<span style="color:#00D9FF;font-weight:700;margin-left:8px;">· ${resultScoreLabel(result)} FINAL</span>`
+            ? `<span style="color:#00D9FF;font-weight:700;margin-left:8px;">· ${resultScoreLabel(result)} FINAL${resultETSuffix(result)}</span>`
             : '';
 
         return `<details style="margin-bottom:10px;border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;">
@@ -2733,7 +2736,7 @@ function renderKnockoutPredictions() {
             const koLive = koLiveKey ? liveScores[koLiveKey] : null;
             let resultChip = '';
             if (savedResult) {
-                resultChip = `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${resultScoreLabel(savedResult)} · FINAL</span>`;
+                resultChip = `<span style="background:rgba(0,217,255,0.1);border:1px solid #00D9FF;color:#00D9FF;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">✅ ${resultScoreLabel(savedResult)} FINAL${resultETSuffix(savedResult)}</span>`;
             } else if (koLive && koLive.status === 'IN_PLAY') {
                 resultChip = `<span style="background:rgba(0,255,136,0.15);border:1px solid #00FF88;color:#00FF88;padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;animation:pulse 1.5s infinite;">⚽ ${koLive.home_score}-${koLive.away_score} · ${koLive.minute || ''}' EN VIVO</span>`;
             } else if (koLive && koLive.status === 'PAUSED') {
