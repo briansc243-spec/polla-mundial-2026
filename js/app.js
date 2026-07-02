@@ -737,25 +737,31 @@ async function fetchLiveScores() {
                 // clock >= 91 = tiempo extra. ESPN nunca usa 91' para añadido de regulación.
                 let score1 = homeScore, score2 = awayScore;
                 let score1ET = null, score2ET = null;
-                if (statusType.name === 'STATUS_FINAL_AET' && comp.details?.length) {
-                    let h90 = 0, a90 = 0, hAll = 0, aAll = 0;
-                    const homeId = home.team.id;
-                    for (const det of comp.details) {
-                        if (!det.scoringPlay || det.ownGoal || det.shootout) continue;
-                        const clockMin = parseInt(det.clock?.displayValue || '0');
-                        const isHome = det.team?.id === homeId;
-                        if (clockMin < 91) { if (isHome) h90++; else a90++; }
-                        if (isHome) hAll++; else aAll++;
+                let aetDetailsReady = true; // para AET: false si details vacío (no guardar datos incompletos)
+                if (statusType.name === 'STATUS_FINAL_AET') {
+                    if (!comp.details?.length) {
+                        // ESPN aún no tiene el detalle del partido — esperar próximo poll
+                        aetDetailsReady = false;
+                    } else {
+                        let h90 = 0, a90 = 0, hAll = 0, aAll = 0;
+                        const homeId = home.team.id;
+                        for (const det of comp.details) {
+                            if (!det.scoringPlay || det.ownGoal || det.shootout) continue;
+                            const clockMin = parseInt(det.clock?.displayValue || '0');
+                            const isHome = det.team?.id === homeId;
+                            if (clockMin < 91) { if (isHome) h90++; else a90++; }
+                            if (isHome) hAll++; else aAll++;
+                        }
+                        score1 = h90; score2 = a90;
+                        score1ET = hAll; score2ET = aAll;
                     }
-                    score1 = h90; score2 = a90;
-                    score1ET = hAll; score2ET = aAll;
                 }
 
                 // Fase de grupos: busca por nombres de equipo
                 const internalMatch = matches.find(m =>
                     stripFlag(m.team1) === homeEs && stripFlag(m.team2) === awayEs
                 );
-                if (internalMatch && new Date(internalMatch.dateTime) <= now && !results.find(r => r.matchId === internalMatch.id)) {
+                if (aetDetailsReady && internalMatch && new Date(internalMatch.dateTime) <= now && !results.find(r => r.matchId === internalMatch.id)) {
                     const val = { matchId: internalMatch.id, score1, score2, ...(score1ET !== null && { score1ET, score2ET }) };
                     results.push(val);
                     await storage.set(`result:${internalMatch.id}`, val);
@@ -774,7 +780,7 @@ async function fetchLiveScores() {
                                 const diff = Math.abs(new Date(m.dateTime).getTime() - espnKickoff.getTime());
                                 return diff < 90 * 60 * 1000;
                             });
-                            if (koMatch && new Date(koMatch.dateTime) <= now && !results.find(r => r.matchId === koMatch.id)) {
+                            if (aetDetailsReady && koMatch && new Date(koMatch.dateTime) <= now && !results.find(r => r.matchId === koMatch.id)) {
                                 const val = { matchId: koMatch.id, score1, score2, ...(score1ET !== null && { score1ET, score2ET }) };
                                 results.push(val);
                                 await storage.set(`result:${koMatch.id}`, val);
