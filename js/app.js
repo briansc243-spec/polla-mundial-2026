@@ -1281,12 +1281,12 @@ function renderMyPredictions() {
             </div>`;
     }
 
-    // Fase eliminatoria — va primero
+    // Fase eliminatoria — va primero, ronda más avanzada arriba
     const groupStandingsMP = getGroupStandings();
     const bestThirdsMP     = computeBestThirds(groupStandingsMP);
     let knockoutHtml = '';
 
-    for (const key of PREDICTIONS_TAB_ROUNDS) {
+    for (const key of [...PREDICTIONS_TAB_ROUNDS].reverse()) {
         const round = BRACKET[key];
         const roundPicks = round.matches
             .map(m => ({ match: m, pred: me.predictions.find(p => p.matchId === m.id) }))
