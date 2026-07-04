@@ -2696,6 +2696,9 @@ function renderKnockoutPredictions() {
     const ROUND_MOD    = { r32: '', r16: '--r16', qf: '--qf', sf: '--sf', third: '--3rd', final: '--final' };
     const START_LABELS = { r32: '28 JUN', r16: '4 JUL', qf: '9 JUL', sf: '14 JUL', third: '18 JUL', final: '19 JUL' };
 
+    // Determine which round to auto-open: the most-advanced unlocked round
+    const autoOpenKey = [...PREDICTIONS_TAB_ROUNDS].reverse().find(k => _isRoundOpen(k, bestThirds)) || null;
+
     let anyOpen = false;
 
     const cardsHtml = PREDICTIONS_TAB_ROUNDS.map(key => {
@@ -2704,6 +2707,7 @@ function renderKnockoutPredictions() {
         const label  = START_LABELS[key] || round.startDate.toUpperCase();
         const isOpen = _isRoundOpen(key, bestThirds);
         if (isOpen) anyOpen = true;
+        const startExpanded = key === autoOpenKey;
 
         const matchRows = round.matches.map(match => {
             if (!isOpen) {
@@ -2780,10 +2784,10 @@ function renderKnockoutPredictions() {
                         <span class="r32-start-label">INICIO</span>
                         <span class="r32-start-date">${label}</span>
                     </div>
-                    <span class="special-toggle-arrow" id="kp-arrow-pred_${key}">▼</span>
+                    <span class="special-toggle-arrow${startExpanded ? ' open' : ''}" id="kp-arrow-pred_${key}">▼</span>
                 </div>
             </div>
-            <div class="kp-body" id="kp-body-pred_${key}">
+            <div class="kp-body${startExpanded ? ' open' : ''}" id="kp-body-pred_${key}">
                 ${matchRows}
             </div>
         </div>`;
@@ -2793,7 +2797,7 @@ function renderKnockoutPredictions() {
         ? `<div class="kp-locked-notice" style="border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.05);">
             <span style="font-size:1.6rem;flex-shrink:0;line-height:1;margin-top:2px;">✅</span>
             <div>
-                <p class="kp-lock-title" style="color:#00FF88;">Predicciones 16avos abiertas</p>
+                <p class="kp-lock-title" style="color:#00FF88;">Predicciones 8avos abiertas</p>
                 <p class="kp-lock-body">Cada partido se cierra 1 minuto antes del inicio. Guarda tus picks con el botón al final del listado.</p>
             </div>
            </div>`
@@ -2806,19 +2810,6 @@ function renderKnockoutPredictions() {
            </div>`;
 
     container.innerHTML = `${noticeHtml}${cardsHtml}`;
-
-    // Auto-open most-advanced unlocked round (last open round in sequence)
-    if (anyOpen) {
-        const lastOpenKey = [...PREDICTIONS_TAB_ROUNDS].reverse().find(k => _isRoundOpen(k, bestThirds));
-        if (lastOpenKey) {
-            const body = document.getElementById(`kp-body-pred_${lastOpenKey}`);
-            const arrow = document.getElementById(`kp-arrow-pred_${lastOpenKey}`);
-            if (body && !body.classList.contains('open')) {
-                body.classList.add('open');
-                if (arrow) arrow.classList.add('open');
-            }
-        }
-    }
 }
 
 async function submitKnockoutPredictions(roundKey) {
