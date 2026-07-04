@@ -2807,12 +2807,12 @@ function renderKnockoutPredictions() {
 
     container.innerHTML = `${noticeHtml}${cardsHtml}`;
 
-    // Auto-open first unlocked round
+    // Auto-open most-advanced unlocked round (last open round in sequence)
     if (anyOpen) {
-        const firstOpenKey = PREDICTIONS_TAB_ROUNDS.find(k => _isRoundOpen(k, bestThirds));
-        if (firstOpenKey) {
-            const body = document.getElementById(`kp-body-pred_${firstOpenKey}`);
-            const arrow = document.getElementById(`kp-arrow-pred_${firstOpenKey}`);
+        const lastOpenKey = [...PREDICTIONS_TAB_ROUNDS].reverse().find(k => _isRoundOpen(k, bestThirds));
+        if (lastOpenKey) {
+            const body = document.getElementById(`kp-body-pred_${lastOpenKey}`);
+            const arrow = document.getElementById(`kp-arrow-pred_${lastOpenKey}`);
             if (body && !body.classList.contains('open')) {
                 body.classList.add('open');
                 if (arrow) arrow.classList.add('open');
