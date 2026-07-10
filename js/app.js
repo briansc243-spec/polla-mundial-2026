@@ -461,6 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ========================================
 // Sistema de almacenamiento — Supabase
 let _sb = null;
+let _confettiShown = false;
 function db() {
     if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return _sb;
@@ -2150,6 +2151,12 @@ function switchTab(tabName) {
     }
     if (tabName === 'predictions') {
         renderKnockoutPredictions();
+    }
+    if (tabName === 'leaderboard' && !_confettiShown && typeof confetti === 'function') {
+        _confettiShown = true;
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.55 } });
+        setTimeout(() => confetti({ particleCount: 80, spread: 60, origin: { x: 0.1, y: 0.6 } }), 200);
+        setTimeout(() => confetti({ particleCount: 80, spread: 60, origin: { x: 0.9, y: 0.6 } }), 400);
     }
 }
 
