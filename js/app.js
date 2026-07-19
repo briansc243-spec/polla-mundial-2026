@@ -1183,6 +1183,8 @@ async function init() {
         _initLock = false;
     }
 
+    await fetchAutoSpecialResults();
+
     renderMatches();
     renderLiveBar();
     renderMyPredictions();
@@ -1771,10 +1773,12 @@ function calculatePoints(predictions, results, specialPredictions) {
 
     // Predicciones especiales: +5 cada acierto
     if (specialPredictions && specialResults) {
-        const norm = s => (s || '').trim().toLowerCase();
+        // norm: minúsculas + sin tildes. fuzzy: coincidencia parcial (para "Messi" vs "Lionel Messi")
+        const norm = s => (s || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        const match = (pred, actual) => { const p = norm(pred), a = norm(actual); return p && a && (p === a || a.includes(p) || p.includes(a)); };
         const fields = ['champion', 'runnerUp', 'thirdPlace', 'topScorer'];
         for (const f of fields) {
-            if (specialResults[f] && norm(specialPredictions[f]) === norm(specialResults[f])) {
+            if (specialResults[f] && match(specialPredictions[f], specialResults[f])) {
                 points += 5;
                 special++;
             }
@@ -2409,6 +2413,39 @@ const PREDICTIONS_TAB_ROUNDS = ['r32', 'r16', 'qf', 'sf', 'third', 'final'];
 
 // Calcula standings de cada grupo desde results[] globales
 // Obtiene los equipos reales de los partidos eliminatorios desde ESPN
+async function fetchAutoSpecialResults() {
+    const updated = { ...specialResults };
+    let changed = false;
+
+    // 3er puesto — P103
+    const p103 = _actualBracketTeams['P103'];
+    if (p103?.winner) {
+        const team = stripFlag(p103.winner === 'team1' ? p103.team1 : p103.team2);
+        if (team && updated.thirdPlace !== team) { updated.thirdPlace = team; changed = true; }
+    }
+
+    // Campeón + Subcampeón — P104 (Final)
+    const p104 = _actualBracketTeams['P104'];
+    if (p104?.winner) {
+        const champ  = stripFlag(p104.winner === 'team1' ? p104.team1 : p104.team2);
+        const runner = stripFlag(p104.winner === 'team1' ? p104.team2 : p104.team1);
+        if (champ  && updated.champion  !== champ)  { updated.champion  = champ;  changed = true; }
+        if (runner && updated.runnerUp  !== runner) { updated.runnerUp  = runner; changed = true; }
+    }
+
+    // Goleador — siempre actualizar desde scoreboard
+    const scorers = await fetchTopScorers();
+    if (scorers.length > 0) {
+        const top = scorers[0].name;
+        if (top && updated.topScorer !== top) { updated.topScorer = top; changed = true; }
+    }
+
+    if (changed) {
+        await storage.set('special_results', updated);
+        specialResults = updated;
+    }
+}
+
 async function fetchActualBracketTeams() {
     try {
         const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260628-20260719');
