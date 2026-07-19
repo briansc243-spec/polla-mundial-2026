@@ -1951,37 +1951,66 @@ function renderAllPicks() {
     // Bloque de especiales: se muestra solo cuando ya cerró el plazo
     let specialsHtml = '';
     if (now >= SPECIAL_DEADLINE) {
+        const normSp = s => (s || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        const matchSp = (pred, actual) => { const p = normSp(pred), a = normSp(actual); return p && a && (p === a || a.includes(p) || p.includes(a)); };
+        const spFields = [
+            { key: 'champion',   label: '🥇 Campeón' },
+            { key: 'runnerUp',   label: '🥈 Subcampeón' },
+            { key: 'thirdPlace', label: '🥉 3er puesto' },
+            { key: 'topScorer',  label: '⚽ Goleador' },
+        ];
+
         const specialRows = participants.map(p => {
             const sp = p.specialPredictions || {};
-            const fields = [
-                { label: '🥇 Campeón',     value: sp.champion   },
-                { label: '🥈 Subcampeón',  value: sp.runnerUp   },
-                { label: '🥉 Tercer puesto', value: sp.thirdPlace },
-                { label: '⚽ Goleador',    value: sp.topScorer  },
-            ];
-            const cells = fields.map(f =>
-                `<td style="padding:8px 10px;text-align:center;font-size:0.85rem;">${f.value && f.value.trim() ? f.value : '<span style="color:var(--text-dim);">—</span>'}</td>`
-            ).join('');
+            let pts = 0;
+            const cells = spFields.map(f => {
+                const val = sp[f.key] || '';
+                const actual = specialResults[f.key] || '';
+                const known = !!actual;
+                const hit = known && matchSp(val, actual);
+                if (hit) pts += 5;
+                let display;
+                if (!val) {
+                    display = '<span style="color:var(--text-dim);">—</span>';
+                } else if (hit) {
+                    display = `<span style="color:#00FF88;font-weight:700;">✅ ${val}</span>`;
+                } else if (known) {
+                    display = `<span style="color:#FF3366;text-decoration:line-through;opacity:0.7;">${val}</span>`;
+                } else {
+                    display = `<span style="color:#E0E6FF;">${val}</span>`;
+                }
+                return `<td style="padding:8px 10px;text-align:center;font-size:0.85rem;">${display}</td>`;
+            }).join('');
+            const ptsBadge = pts > 0
+                ? `<span style="color:#FFD700;font-weight:700;">+${pts} pts</span>`
+                : `<span style="color:var(--text-dim);">0 pts</span>`;
             return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-                <td style="padding:8px 14px;">${p.name}</td>
+                <td style="padding:8px 14px;font-weight:600;">${p.name}</td>
                 ${cells}
+                <td style="padding:8px 10px;text-align:center;font-size:0.85rem;">${ptsBadge}</td>
             </tr>`;
         }).join('');
+
+        const srKnown = spFields.filter(f => specialResults[f.key]).length;
+        const pendingNote = srKnown < 4
+            ? `<span style="color:var(--text-dim);font-size:0.78rem;">${srKnown}/4 resultados confirmados</span>`
+            : `<span style="color:#00FF88;font-size:0.78rem;">✅ Todos confirmados</span>`;
 
         specialsHtml = `
         <details style="margin-bottom:10px;border:1px solid rgba(255,215,0,0.3);border-radius:12px;overflow:hidden;">
             <summary style="padding:13px 18px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;background:rgba(255,215,0,0.05);user-select:none;">
                 <span style="font-size:0.95rem;font-weight:600;color:#FFD700;">⭐ Predicciones Especiales</span>
-                <span style="margin-left:auto;color:var(--text-dim);font-size:0.8rem;">Plazo cerrado</span>
+                <span style="margin-left:auto;">${pendingNote}</span>
             </summary>
             <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;min-width:420px;">
+            <table style="width:100%;border-collapse:collapse;min-width:460px;">
                 <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font-size:0.82rem;">
                     <th style="padding:8px 14px;text-align:left;font-weight:500;">Participante</th>
                     <th style="padding:8px 10px;text-align:center;font-weight:500;">🥇 Campeón</th>
                     <th style="padding:8px 10px;text-align:center;font-weight:500;">🥈 Subcampeón</th>
                     <th style="padding:8px 10px;text-align:center;font-weight:500;">🥉 3er puesto</th>
                     <th style="padding:8px 10px;text-align:center;font-weight:500;">⚽ Goleador</th>
+                    <th style="padding:8px 10px;text-align:center;font-weight:500;">Pts</th>
                 </tr></thead>
                 <tbody>${specialRows}</tbody>
             </table>
