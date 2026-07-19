@@ -2462,11 +2462,13 @@ async function fetchAutoSpecialResults() {
         if (runner && updated.runnerUp  !== runner) { updated.runnerUp  = runner; changed = true; }
     }
 
-    // Goleador — siempre actualizar desde scoreboard
-    const scorers = await fetchTopScorers();
-    if (scorers.length > 0) {
-        const top = scorers[0].name;
-        if (top && updated.topScorer !== top) { updated.topScorer = top; changed = true; }
+    // Goleador — solo se fija cuando la Final (P104) ha terminado
+    if (p104?.winner) {
+        const scorers = await fetchTopScorers();
+        if (scorers.length > 0) {
+            const top = scorers[0].name;
+            if (top && updated.topScorer !== top) { updated.topScorer = top; changed = true; }
+        }
     }
 
     if (changed) {
