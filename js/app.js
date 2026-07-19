@@ -462,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Sistema de almacenamiento — Supabase
 let _sb = null;
 let _confettiShown = false;
+let specialResults = {};
 function db() {
     if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return _sb;
@@ -1152,12 +1153,14 @@ async function init() {
     try {
         matches = defaultMatches;
 
-        // Cargar participantes, resultados y equipos reales en paralelo
-        const [rawParticipants, rawResults] = await Promise.all([
+        // Cargar participantes, resultados, especiales y equipos reales en paralelo
+        const [rawParticipants, rawResults, rawSpecial] = await Promise.all([
             storage.getAll('participant:'),
             storage.getAll('result:'),
+            storage.get('special_results'),
             fetchActualBracketTeams(),
         ]);
+        specialResults = rawSpecial || {};
 
         // Deduplicar participantes y excluir admin
         const seen = new Set();
@@ -1209,7 +1212,7 @@ function renderMyPredictions() {
     const fmtDateTime = ts => new Date(ts).toLocaleString('es-PE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' });
     const registeredAt = me.createdAt ? fmtDateTime(me.createdAt) : fmtDateTime(me.timestamp);
     const updatedAt = me.timestamp && me.createdAt && me.timestamp !== me.createdAt ? ` · Actualizado: ${fmtDateTime(me.timestamp)}` : '';
-    const myStats = calculatePoints(me.predictions, results);
+    const myStats = calculatePoints(me.predictions, results, me.specialPredictions);
     const pointsText = myStats.points > 0 ? ` · 🏆 ${myStats.points} pts (${myStats.exact} exactos, ${myStats.tendency} tendencias)` : '';
     subtitle.textContent = `Registrado: ${registeredAt}${updatedAt}${pointsText}`;
 
@@ -1518,11 +1521,39 @@ function renderMatches() {
 }
 
 // Renderizar partidos para ingresar resultados
+async function saveSpecialResults() {
+    const norm = id => document.getElementById(id)?.value.trim() || '';
+    const data = {
+        champion:   norm('sr-champion'),
+        runnerUp:   norm('sr-runnerUp'),
+        thirdPlace: norm('sr-thirdPlace'),
+        topScorer:  norm('sr-topScorer'),
+    };
+    await storage.set('special_results', data);
+    specialResults = data;
+    updateLeaderboard();
+    showToast('✅ Resultados especiales guardados');
+}
+
 function renderResults() {
     const isAdmin = sessionStorage.getItem('pollaUser') === 'admin';
     const container = document.getElementById('resultsContainer');
     const saveBtn = document.getElementById('saveResultsBtn');
     if (saveBtn) saveBtn.style.display = isAdmin ? 'block' : 'none';
+
+    // Panel de predicciones especiales (solo admin)
+    const specialPanel = document.getElementById('specialResultsPanel');
+    if (specialPanel) {
+        if (isAdmin) {
+            specialPanel.style.display = 'block';
+            document.getElementById('sr-champion').value   = specialResults.champion   || '';
+            document.getElementById('sr-runnerUp').value   = specialResults.runnerUp   || '';
+            document.getElementById('sr-thirdPlace').value = specialResults.thirdPlace || '';
+            document.getElementById('sr-topScorer').value  = specialResults.topScorer  || '';
+        } else {
+            specialPanel.style.display = 'none';
+        }
+    }
 
     const groupStandings = getGroupStandings();
     const bestThirds = computeBestThirds(groupStandings);
@@ -1715,25 +1746,22 @@ async function saveResults() {
 }
 
 // Calcular puntos
-function calculatePoints(predictions, results) {
+function calculatePoints(predictions, results, specialPredictions) {
     let points = 0;
     let exact = 0;
     let tendency = 0;
+    let special = 0;
 
     predictions.forEach(pred => {
         const result = results.find(r => r.matchId === pred.matchId);
         if (!result || result.score1 === null || result.score2 === null) return;
 
-        // Resultado exacto: 3 puntos
         if (pred.score1 === result.score1 && pred.score2 === result.score2) {
             points += 3;
             exact++;
-        }
-        // Tendencia correcta (ganador o empate): 1 punto
-        else {
+        } else {
             const predOutcome = Math.sign(pred.score1 - pred.score2);
             const resultOutcome = Math.sign(result.score1 - result.score2);
-            
             if (predOutcome === resultOutcome) {
                 points += 1;
                 tendency++;
@@ -1741,14 +1769,26 @@ function calculatePoints(predictions, results) {
         }
     });
 
-    return { points, exact, tendency };
+    // Predicciones especiales: +5 cada acierto
+    if (specialPredictions && specialResults) {
+        const norm = s => (s || '').trim().toLowerCase();
+        const fields = ['champion', 'runnerUp', 'thirdPlace', 'topScorer'];
+        for (const f of fields) {
+            if (specialResults[f] && norm(specialPredictions[f]) === norm(specialResults[f])) {
+                points += 5;
+                special++;
+            }
+        }
+    }
+
+    return { points, exact, tendency, special };
 }
 
 // Actualizar tabla de posiciones
 function updateLeaderboard() {
     // Siempre mostrar todos los participantes, aunque no haya resultados
     const leaderboard = participants.map(p => {
-        const stats = calculatePoints(p.predictions, results);
+        const stats = calculatePoints(p.predictions, results, p.specialPredictions);
         return {
             name: p.name,
             ...stats
@@ -2014,9 +2054,9 @@ function updateStats() {
     const username = sessionStorage.getItem('pollaUser');
     const displayName = localStorage.getItem(`pollaDisplayName:${username}`);
     const me = participants.find(p => p.name === displayName);
-    const myStats = me ? calculatePoints(me.predictions, results) : { points: 0, exact: 0, tendency: 0 };
+    const myStats = me ? calculatePoints(me.predictions, results, me.specialPredictions) : { points: 0, exact: 0, tendency: 0, special: 0 };
 
-    const allScores = participants.map(p => calculatePoints(p.predictions, results).points);
+    const allScores = participants.map(p => calculatePoints(p.predictions, results, p.specialPredictions).points);
     const myRank = [...allScores].sort((a, b) => b - a).indexOf(myStats.points) + 1;
 
     document.getElementById('totalParticipants').textContent = participants.length;
@@ -2036,7 +2076,7 @@ function updateStats() {
 function renderCharts(myDisplayName) {
     const participantData = participants.map(p => ({
         name: p.name,
-        ...calculatePoints(p.predictions, results)
+        ...calculatePoints(p.predictions, results, p.specialPredictions)
     })).sort((a, b) => b.points - a.points);
 
     // Colores: resaltar al usuario actual

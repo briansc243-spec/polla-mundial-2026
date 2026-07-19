@@ -1579,6 +1579,30 @@
 
         <!-- TAB: RESULTADOS -->
         <div id="results" class="tab-content">
+            <!-- Panel predicciones especiales (solo admin) -->
+            <div id="specialResultsPanel" class="card" style="display:none; margin-bottom:16px;">
+                <h2 class="card-title">⭐ Resultados Especiales</h2>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                    <div>
+                        <label style="font-size:0.78rem; color:#A0A8C0; letter-spacing:1px;">🥇 CAMPEÓN</label>
+                        <input id="sr-champion" type="text" class="score-input" style="width:100%;padding:8px 10px;font-size:0.9rem;" placeholder="ej. Francia">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem; color:#A0A8C0; letter-spacing:1px;">🥈 SUBCAMPEÓN</label>
+                        <input id="sr-runnerUp" type="text" class="score-input" style="width:100%;padding:8px 10px;font-size:0.9rem;" placeholder="ej. Argentina">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem; color:#A0A8C0; letter-spacing:1px;">🥉 TERCER PUESTO</label>
+                        <input id="sr-thirdPlace" type="text" class="score-input" style="width:100%;padding:8px 10px;font-size:0.9rem;" placeholder="ej. Inglaterra">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem; color:#A0A8C0; letter-spacing:1px;">⚽ GOLEADOR</label>
+                        <input id="sr-topScorer" type="text" class="score-input" style="width:100%;padding:8px 10px;font-size:0.9rem;" placeholder="ej. Haaland">
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="saveSpecialResults()">Guardar Resultados Especiales</button>
+            </div>
+
             <div class="card">
                 <h2 class="card-title">Ingresar Resultados Reales</h2>
                 <div id="resultsContainer"></div>
